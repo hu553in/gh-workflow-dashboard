@@ -14,19 +14,47 @@
       <header>
         <div>
           <h1><i class="fa-brands fa-github"></i> Workflow Dashboard</h1>
-          <p>All GitHub Actions workflows at a glance</p>
+          <p>All GitHub Actions workflows at a glance.</p>
         </div>
-        <button class="btn btn-danger" id="btn-clear-token">
-          <i class="fa-solid fa-trash-can"></i> Clear token
-        </button>
+        <div class="header-actions">
+          <div class="control-with-note">
+            <label class="runs-limit" for="runs-limit">
+              <span>Runs per repo</span>
+              <input id="runs-limit" type="number" min="100" step="100" value="100" />
+            </label>
+            <p class="control-note">
+              More runs = slower load and higher rate-limit risk.<br />
+              Fewer runs may hide older last runs.
+            </p>
+          </div>
+          <button class="btn btn-danger" id="btn-clear-token">
+            <i class="fa-solid fa-trash-can"></i> Clear token
+          </button>
+        </div>
       </header>
 
+      <label class="field-label" for="token">GitHub token</label>
       <div class="token-bar">
         <input id="token" type="password" placeholder="ghp_..." />
         <button class="btn btn-primary" id="btn-load">
           <i class="fa-solid fa-arrow-right"></i> Load
         </button>
       </div>
+      <p class="control-note token-note">
+        Data is stored in your browser only.<br />
+        <a
+          href="https://github.com/settings/personal-access-tokens"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Fine-grained PAT
+        </a>
+        : Metadata read, Actions read, Contents read.<br />
+        <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer">
+          Classic PAT
+        </a>
+        : repo.
+      </p>
       <p id="token-status"></p>
 
       <div id="loading" class="hidden">
@@ -41,7 +69,6 @@
             <button id="toggle-all" class="btn">
               <i class="fa-solid fa-angles-down"></i> Expand all
             </button>
-            <button class="btn" id="btn-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
           </div>
         </div>
         <div id="repos"></div>
