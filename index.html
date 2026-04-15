@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Workflow Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div>
+          <h1><i class="fa-brands fa-github"></i> Workflow Dashboard</h1>
+          <p>All GitHub Actions workflows at a glance</p>
+        </div>
+        <button class="btn btn-danger" id="btn-clear-token">
+          <i class="fa-solid fa-trash-can"></i> Clear token
+        </button>
+      </header>
+
+      <div class="token-bar">
+        <input id="token" type="password" placeholder="ghp_..." />
+        <button class="btn btn-primary" id="btn-load">
+          <i class="fa-solid fa-arrow-right"></i> Load
+        </button>
+      </div>
+      <p id="token-status"></p>
+
+      <div id="loading" class="hidden">
+        <i class="fa-solid fa-circle-notch fa-spin"></i>
+        <p>Loading repositories and workflows…</p>
+      </div>
+
+      <div id="content" class="hidden">
+        <div class="stats-bar">
+          <span id="stats"></span>
+          <div class="stats-actions">
+            <button id="toggle-all" class="btn">
+              <i class="fa-solid fa-angles-down"></i> Expand all
+            </button>
+            <button class="btn" id="btn-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          </div>
+        </div>
+        <div id="repos"></div>
+      </div>
+
+      <div id="empty" class="hidden">
+        <i class="fa-solid fa-inbox"></i>
+        <p>No repositories with workflows</p>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

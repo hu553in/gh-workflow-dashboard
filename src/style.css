@@ -1,0 +1,398 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #0e1117;
+  --surface: #161b22;
+  --surface-hover: #1c2129;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-dim: #7d8590;
+  --accent: #58a6ff;
+  --accent-hover: #79b8ff;
+  --green: #3fb950;
+  --green-bg: rgb(63 185 80 / 12%);
+  --red: #f85149;
+  --red-bg: rgb(248 81 73 / 12%);
+  --blue: #58a6ff;
+  --blue-bg: rgb(88 166 255 / 12%);
+  --radius: 10px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+header h1 i {
+  color: var(--text-dim);
+}
+
+header p {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  font:
+    500 0.8rem 'DM Sans',
+    sans-serif;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.btn:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-danger {
+  color: var(--red);
+}
+
+.btn-danger:hover {
+  border-color: var(--red);
+  background: var(--red-bg);
+}
+
+.token-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.token-bar input {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font:
+    0.85rem 'JetBrains Mono',
+    monospace;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.token-bar input:focus {
+  border-color: var(--accent);
+}
+
+.token-bar input::placeholder {
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+
+#token-status {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-top: -0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.stats-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.stats-bar span {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.stats-bar strong {
+  color: var(--accent);
+}
+
+.stats-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.cache-age {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  opacity: 0.7;
+  margin-left: 0.5rem;
+}
+
+#loading {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-dim);
+}
+
+#loading i {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--accent);
+}
+
+#loading p {
+  font-size: 0.9rem;
+}
+
+.repo {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.repo:hover {
+  border-color: #444c56;
+}
+
+.repo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.repo-header:hover {
+  background: var(--surface-hover);
+}
+
+.repo-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.repo-info img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.repo-info a {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.repo-info a:hover {
+  color: var(--accent);
+}
+
+.wf-count {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  background: rgb(255 255 255 / 6%);
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+}
+
+.repo-tally {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+
+.repo-tally .t-pass {
+  color: var(--green);
+}
+
+.repo-tally .t-fail {
+  color: var(--red);
+}
+
+.repo-tally .t-other {
+  color: var(--text-dim);
+}
+
+.chevron {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  transition: transform 0.2s;
+}
+
+.repo.open .chevron {
+  transform: rotate(180deg);
+}
+
+.repo-body {
+  border-top: 1px solid var(--border);
+  padding: 0.5rem;
+}
+
+.wf-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  transition: background 0.1s;
+}
+
+.wf-row:hover {
+  background: rgb(255 255 255 / 3%);
+}
+
+.wf-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.wf-name {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.wf-name:hover {
+  color: var(--accent);
+}
+
+.wf-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-dim);
+}
+
+.wf-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.badge {
+  font:
+    600 0.65rem 'DM Sans',
+    sans-serif;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge-success {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.badge-failure {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.badge-running {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+
+.badge-neutral {
+  background: rgb(255 255 255 / 6%);
+  color: var(--text-dim);
+}
+
+.dot-active {
+  color: var(--green);
+}
+
+.dot-disabled {
+  color: var(--text-dim);
+}
+
+.run-time {
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  min-width: 80px;
+}
+
+.wf-link {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  transition: color 0.1s;
+}
+
+.wf-link:hover {
+  color: var(--accent);
+}
+
+#empty {
+  text-align: center;
+  padding: 5rem 0;
+  color: var(--text-dim);
+}
+
+#empty i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+}
+
+.hidden {
+  display: none !important;
+}
