@@ -21,7 +21,6 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "preview": "vite preview",
     "check": "lefthook run check --all-files --force",
     "check:fix": "lefthook run check-fix --all-files --force",
     "prepare": "command -v lefthook && lefthook install || true"
