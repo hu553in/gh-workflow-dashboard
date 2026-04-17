@@ -5,6 +5,7 @@
   --surface: #161b22;
   --surface-hover: #1c2129;
   --border: #30363d;
+  --border-hover: #444c56;
   --text: #e6edf3;
   --text-dim: #7d8590;
   --accent: #58a6ff;
@@ -280,6 +281,21 @@ header p {
   margin-bottom: 1.5rem;
 }
 
+.token-note code {
+  display: inline-block;
+  margin: 0 0.25rem 0.2rem 0;
+  padding: 0.14rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  line-height: 1.4;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
 #loading,
 #empty {
   text-align: center;
@@ -310,7 +326,7 @@ header p {
 }
 
 .repo:hover {
-  border-color: #444c56;
+  border-color: var(--border-hover);
 }
 
 .repo-header {
