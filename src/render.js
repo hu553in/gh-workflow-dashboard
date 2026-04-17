@@ -157,6 +157,7 @@ function renderRepo(repo, workflows, latestRuns) {
   const runsByWorkflow = groupRunsByWorkflow(latestRuns);
   let pass = 0;
   let fail = 0;
+  let running = 0;
   let other = 0;
 
   for (const wf of workflows) {
@@ -167,7 +168,8 @@ function renderRepo(repo, workflows, latestRuns) {
     }
 
     for (const run of runs) {
-      if (run.conclusion === 'success') pass++;
+      if (run.status === 'in_progress') running++;
+      else if (run.conclusion === 'success') pass++;
       else if (run.conclusion === 'failure') fail++;
       else other++;
     }
@@ -190,6 +192,11 @@ function renderRepo(repo, workflows, latestRuns) {
   const avatar = document.createElement('img');
   avatar.src = repo.owner.avatar_url;
   avatar.alt = `${repo.owner.login} avatar`;
+  avatar.loading = 'lazy';
+  avatar.onerror = function () {
+    this.src = 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png';
+    this.onerror = null;
+  };
 
   const repoLink = link(repo.html_url, 'hover-accent', repo.full_name);
   repoLink.addEventListener('click', e => e.stopPropagation());
@@ -222,6 +229,7 @@ function renderRepo(repo, workflows, latestRuns) {
   for (const [cls, symbol, count] of [
     ['t-pass', '✓', pass],
     ['t-fail', '✗', fail],
+    [`t-running`, '⟳', running],
     ['t-other', '?', other],
   ]) {
     if (!count) continue;

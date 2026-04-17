@@ -369,6 +369,10 @@ header p {
   color: var(--red);
 }
 
+.repo-tally .t-running {
+  color: var(--blue);
+}
+
 .repo-tally .t-other {
   color: var(--text-dim);
 }
