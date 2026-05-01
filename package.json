@@ -1,5 +1,6 @@
 {
   "name": "gh-workflow-dashboard",
+  "description": "Client-side dashboard for monitoring GitHub Actions workflows across repositories.",
   "author": "hu553in",
   "private": true,
   "version": "1.0.0",
