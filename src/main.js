@@ -38,6 +38,15 @@ function setButtonLabel(buttonId, iconClass, label) {
   $(buttonId).replaceChildren(icon(iconClass), document.createTextNode(` ${label}`));
 }
 
+function setTokenVisibility(isVisible) {
+  const button = $('btn-toggle-token');
+  $('token').type = isVisible ? 'text' : 'password';
+  button.setAttribute('aria-label', isVisible ? 'Hide token' : 'Show token');
+  button.setAttribute('aria-pressed', String(isVisible));
+  button.title = isVisible ? 'Hide token' : 'Show token';
+  button.replaceChildren(icon(isVisible ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'));
+}
+
 function appendRef(map, name, sha) {
   if (!name || !sha) return;
   if (!map.has(name)) map.set(name, new Set());
@@ -157,10 +166,10 @@ async function loadData(force = false) {
   if (!getToken()) return alert('Enter a GitHub token first.');
 
   setLoadingState(true);
-  clearResultsView();
 
   try {
     const results = await fetchAll();
+    clearResultsView();
     renderResults(results);
   } catch (e) {
     console.error(e);
@@ -209,12 +218,16 @@ function handleClearToken() {
   localStorage.removeItem('github_token');
   setToken('');
   $('token').value = '';
+  setTokenVisibility(false);
   setTokenStatus();
   resetResultsView();
 }
 
 $('btn-load').addEventListener('click', validateAndLoad);
 $('btn-clear-token').addEventListener('click', handleClearToken);
+$('btn-toggle-token').addEventListener('click', () => {
+  setTokenVisibility($('token').type === 'password');
+});
 $('toggle-all').addEventListener('click', toggleAll);
 
 $('token').addEventListener('keydown', e => {

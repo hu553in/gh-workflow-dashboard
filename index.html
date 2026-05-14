@@ -35,7 +35,19 @@
 
       <label class="field-label" for="token">GitHub token</label>
       <div class="token-bar">
-        <input id="token" type="password" placeholder="ghp_..." />
+        <div class="token-input">
+          <input id="token" type="password" placeholder="ghp_..." />
+          <button
+            id="btn-toggle-token"
+            class="token-visibility-toggle"
+            type="button"
+            aria-label="Show token"
+            aria-pressed="false"
+            title="Show token"
+          >
+            <i class="fa-regular fa-eye"></i>
+          </button>
+        </div>
         <button class="btn btn-primary" id="btn-load">
           <i class="fa-solid fa-arrow-right"></i> Load
         </button>

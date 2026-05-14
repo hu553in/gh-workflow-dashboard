@@ -16,6 +16,8 @@
   --red-bg: rgb(248 81 73 / 12%);
   --blue: #58a6ff;
   --blue-bg: rgb(88 166 255 / 12%);
+  --yellow: #d29922;
+  --yellow-bg: rgb(210 153 34 / 12%);
   --radius: 10px;
 }
 
@@ -156,9 +158,16 @@ header p {
   margin-bottom: 0.5rem;
 }
 
-.token-bar input {
+.token-input {
+  position: relative;
   flex: 1;
-  padding: 0.6rem 1rem;
+  min-width: 0;
+}
+
+.token-input input {
+  width: 100%;
+  flex: 1;
+  padding: 0.6rem 2.65rem 0.6rem 1rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -168,6 +177,36 @@ header p {
     monospace;
   outline: none;
   transition: border-color 0.15s;
+}
+
+.token-visibility-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.token-visibility-toggle:hover {
+  background: rgb(255 255 255 / 6%);
+  color: var(--text);
+}
+
+.token-visibility-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .runs-limit input {
@@ -183,12 +222,12 @@ header p {
   outline: none;
 }
 
-.token-bar input:focus,
+.token-input input:focus,
 .runs-limit input:focus {
   border-color: var(--accent);
 }
 
-.token-bar input:read-only,
+.token-input input:read-only,
 .runs-limit input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -197,12 +236,12 @@ header p {
   color: var(--text-dim);
 }
 
-.token-bar input::placeholder {
+.token-input input::placeholder {
   color: var(--text-dim);
   opacity: 0.5;
 }
 
-.token-bar input:read-only::placeholder,
+.token-input input:read-only::placeholder,
 .runs-limit input:disabled::placeholder {
   color: var(--text-dim);
   opacity: 0.7;
@@ -377,6 +416,12 @@ header p {
   margin-left: 0.25rem;
 }
 
+.repo-tally > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
 .repo-tally .t-pass {
   color: var(--green);
 }
@@ -387,6 +432,10 @@ header p {
 
 .repo-tally .t-running {
   color: var(--blue);
+}
+
+.repo-tally .t-queued {
+  color: var(--yellow);
 }
 
 .repo-tally .t-other {
@@ -480,6 +529,9 @@ header p {
 }
 
 .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font:
     600 0.65rem 'DM Sans',
     sans-serif;
@@ -503,6 +555,11 @@ header p {
 .badge-running {
   background: var(--blue-bg);
   color: var(--blue);
+}
+
+.badge-queued {
+  background: var(--yellow-bg);
+  color: var(--yellow);
 }
 
 .badge-neutral {
@@ -549,7 +606,7 @@ header p {
   color: var(--accent);
 }
 
-@media (width <= 720px) {
+@media (width <= 768px) {
   .container {
     padding: 1.25rem 1rem 2rem;
   }
@@ -590,7 +647,8 @@ header p {
 
   .runs-limit input,
   .btn,
-  .token-bar input {
+  .token-input,
+  .token-input input {
     width: 100%;
   }
 

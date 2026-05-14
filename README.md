@@ -12,7 +12,7 @@ It runs entirely in the browser.
 - Resolves run refs to active branches or tags by comparing SHAs
 - Shows each run's status, event type, branch, timestamp, and a link to GitHub
 - Supports a collapsible tree grouped by repository and workflow
-- Provides summary statistics, including total repositories, workflows, and successful and failed workflow counts
+- Provides summary statistics, including total repositories, workflows, and workflow counts by run state
 - Stores the token in browser `localStorage` and sends it only to the GitHub API
 
 ## Usage

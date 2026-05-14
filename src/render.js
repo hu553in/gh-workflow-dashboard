@@ -36,30 +36,123 @@ function repoSortRank(repo) {
   return 0;
 }
 
+const runViews = {
+  success: {
+    mod: 'success',
+    label: 'success',
+    iconClass: 'fa-solid fa-check',
+    countKey: 'pass',
+  },
+  failure: {
+    mod: 'failure',
+    label: 'failure',
+    iconClass: 'fa-solid fa-xmark',
+    countKey: 'fail',
+  },
+  actionRequired: {
+    mod: 'failure',
+    label: 'action_required',
+    iconClass: 'fa-solid fa-triangle-exclamation',
+    countKey: 'fail',
+  },
+  timedOut: {
+    mod: 'failure',
+    label: 'timed_out',
+    iconClass: 'fa-solid fa-hourglass-half',
+    countKey: 'fail',
+  },
+  running: {
+    mod: 'running',
+    label: 'running',
+    iconClass: 'fa-solid fa-circle-notch fa-spin',
+    countKey: 'running',
+  },
+  queued: {
+    mod: 'queued',
+    label: 'queued',
+    iconClass: 'fa-regular fa-clock',
+    countKey: 'queued',
+  },
+  cancelled: {
+    mod: 'neutral',
+    label: 'cancelled',
+    iconClass: 'fa-solid fa-ban',
+    countKey: 'other',
+  },
+  skipped: {
+    mod: 'neutral',
+    label: 'skipped',
+    iconClass: 'fa-solid fa-forward',
+    countKey: 'other',
+  },
+  neutral: {
+    mod: 'neutral',
+    label: 'neutral',
+    iconClass: 'fa-solid fa-minus',
+    countKey: 'other',
+  },
+  stale: {
+    mod: 'neutral',
+    label: 'stale',
+    iconClass: 'fa-solid fa-clock-rotate-left',
+    countKey: 'other',
+  },
+  completed: {
+    mod: 'neutral',
+    label: 'completed',
+    iconClass: 'fa-regular fa-circle-check',
+    countKey: 'other',
+  },
+  other: {
+    mod: 'neutral',
+    label: 'other',
+    iconClass: 'fa-regular fa-circle-question',
+    countKey: 'other',
+  },
+  none: {
+    mod: 'neutral',
+    label: 'no runs',
+    iconClass: 'fa-regular fa-circle',
+    countKey: 'other',
+  },
+};
+
+const statusViews = {
+  queued: runViews.queued,
+  requested: { ...runViews.queued, label: 'requested' },
+  waiting: { ...runViews.queued, label: 'waiting' },
+  pending: { ...runViews.queued, label: 'pending' },
+  in_progress: runViews.running,
+  completed: runViews.completed,
+};
+
+const conclusionViews = {
+  success: runViews.success,
+  failure: runViews.failure,
+  action_required: runViews.actionRequired,
+  timed_out: runViews.timedOut,
+  cancelled: runViews.cancelled,
+  neutral: runViews.neutral,
+  skipped: runViews.skipped,
+  stale: runViews.stale,
+};
+
+function runView(run) {
+  if (!run) return runViews.none;
+  if (run.conclusion && conclusionViews[run.conclusion]) return conclusionViews[run.conclusion];
+  if (statusViews[run.status]) return statusViews[run.status];
+
+  return {
+    ...runViews.other,
+    label: run.conclusion || run.status || runViews.other.label,
+  };
+}
+
 function badge(run) {
   const el = document.createElement('span');
-  el.classList.add('badge');
-
-  let mod = 'neutral';
-  let text = 'no runs';
-
-  if (run) {
-    if (run.status === 'in_progress') {
-      mod = 'running';
-      text = 'running';
-    } else if (run.conclusion === 'success') {
-      mod = 'success';
-      text = 'success';
-    } else if (run.conclusion === 'failure') {
-      mod = 'failure';
-      text = 'failure';
-    } else {
-      text = run.conclusion || run.status;
-    }
-  }
-
-  el.classList.add(`badge-${mod}`);
-  el.textContent = text;
+  const view = runView(run);
+  el.classList.add('badge', `badge-${view.mod}`);
+  el.append(icon(view.iconClass), document.createTextNode(view.label));
   return el;
 }
 
@@ -155,23 +248,23 @@ function renderWorkflowGroup(wf, runsByWorkflow) {
 
 function renderRepo(repo, workflows, latestRuns) {
   const runsByWorkflow = groupRunsByWorkflow(latestRuns);
-  let pass = 0;
-  let fail = 0;
-  let running = 0;
-  let other = 0;
+  const counts = {
+    pass: 0,
+    fail: 0,
+    running: 0,
+    queued: 0,
+    other: 0,
+  };
 
   for (const wf of workflows) {
     const runs = runsByWorkflow.get(wf.id) || [];
     if (!runs.length) {
-      other++;
+      counts.other++;
       continue;
     }
 
     for (const run of runs) {
-      if (run.status === 'in_progress') running++;
-      else if (run.conclusion === 'success') pass++;
-      else if (run.conclusion === 'failure') fail++;
-      else other++;
+      counts[runView(run).countKey]++;
     }
   }
 
@@ -226,16 +319,17 @@ function renderRepo(repo, workflows, latestRuns) {
   const tally = document.createElement('span');
   tally.className = 'repo-tally';
 
-  for (const [cls, symbol, count] of [
-    ['t-pass', '✓', pass],
-    ['t-fail', '✗', fail],
-    [`t-running`, '⟳', running],
-    ['t-other', '?', other],
+  for (const [cls, view, count] of [
+    ['t-pass', runViews.success, counts.pass],
+    ['t-fail', runViews.failure, counts.fail],
+    ['t-running', runViews.running, counts.running],
+    ['t-queued', runViews.queued, counts.queued],
+    ['t-other', runViews.other, counts.other],
   ]) {
     if (!count) continue;
     const el = document.createElement('span');
     el.className = cls;
-    el.textContent = `${symbol} ${count}`;
+    el.append(icon(view.iconClass), document.createTextNode(` ${count}`));
     tally.append(el);
   }
   info.append(wfCount, tally);
