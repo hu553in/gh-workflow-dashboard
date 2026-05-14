@@ -17,11 +17,13 @@
     "stylelint": "^17.11.0",
     "stylelint-config-recommended": "^18.0.0",
     "stylelint-config-standard": "^40.0.0",
-    "vite": "^8.0.12"
+    "vite": "^8.0.12",
+    "vitest": "^4.1.6"
   },
   "scripts": {
     "build": "vite build",
     "dev": "vite",
+    "test": "vitest run --passWithNoTests",
     "check": "lefthook run check --all-files --force",
     "check:fix": "lefthook run check-fix --all-files --force",
     "prepare": "command -v lefthook && lefthook install || true"

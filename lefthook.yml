@@ -18,6 +18,9 @@ pre-commit:
       run: pnpm exec stylelint --max-warnings=0 --fix {staged_files}
       stage_fixed: true
 
+    - name: test
+      run: pnpm test
+
 check:
   jobs:
     - name: eslint
@@ -25,6 +28,9 @@ check:
 
     - name: stylelint
       run: pnpm exec stylelint "**/*.css" --max-warnings=0
+
+    - name: test
+      run: pnpm test
 
 check-fix:
   jobs:
@@ -36,3 +42,6 @@ check-fix:
 
     - name: stylelint
       run: pnpm exec stylelint "**/*.css" --max-warnings=0 --fix
+
+    - name: test
+      run: pnpm test

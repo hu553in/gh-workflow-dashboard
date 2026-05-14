@@ -1,24 +1,56 @@
 import './style.css';
 
 import { api, getToken, paginate, pool, setToken } from './api.js';
-import { icon, renderResults } from './render.js';
+import { appendRef, resolveRunRefType } from './refs.js';
+import { icon, renderResults, setButtonLabel } from './render.js';
+import {
+  DEFAULT_POLL_INTERVAL_MS,
+  isPollingEnabled,
+  normalizePollIntervalMs,
+  normalizeRunsLimit,
+  POLL_INTERVAL_OPTIONS,
+} from './settings.js';
 
 const $ = id => document.getElementById(id);
 let isLoading = false;
+let hasLoadedResults = false;
+let pollTimerId = null;
 
-function setTokenStatus(message = '', color = '') {
-  const status = $('token-status');
-  status.textContent = message;
-  status.style.color = color;
+function setTokenStatus(message = '', state = 'success') {
+  const container = $('token-status-container');
+  const trigger = $('token-status');
+  const popover = $('token-status-help');
+
+  trigger.replaceChildren();
+  popover.textContent = '';
+  trigger.classList.remove('status-success', 'status-error');
+  trigger.setAttribute('aria-expanded', 'false');
+
+  if (!message) {
+    container.classList.add('hidden');
+    return;
+  }
+
+  container.classList.remove('hidden');
+  trigger.classList.add(state === 'success' ? 'status-success' : 'status-error');
+  trigger.append(icon(state === 'success' ? 'fa-solid fa-check' : 'fa-solid fa-xmark'));
+  popover.textContent = message;
 }
 
 function setLoadingState(nextIsLoading) {
   isLoading = nextIsLoading;
-  $('loading').classList.toggle('hidden', !nextIsLoading);
   $('btn-load').disabled = nextIsLoading;
-  $('btn-clear-token').disabled = nextIsLoading;
+  setButtonLabel(
+    'btn-load',
+    nextIsLoading ? 'fa-solid fa-circle-notch fa-spin' : 'fa-solid fa-arrow-right',
+    'Load'
+  );
+  $('btn-clear').disabled = nextIsLoading;
+  $('btn-toggle-token').disabled = nextIsLoading;
+  $('toggle-all').disabled = nextIsLoading;
   $('token').readOnly = nextIsLoading;
   $('runs-limit').disabled = nextIsLoading;
+  $('poll-interval').disabled = nextIsLoading;
 }
 
 function clearResultsView() {
@@ -31,11 +63,25 @@ function clearResultsView() {
 
 function resetResultsView() {
   setLoadingState(false);
+  hasLoadedResults = false;
+  clearPollTimer();
   clearResultsView();
 }
 
-function setButtonLabel(buttonId, iconClass, label) {
-  $(buttonId).replaceChildren(icon(iconClass), document.createTextNode(` ${label}`));
+function closeHelp(trigger) {
+  trigger.setAttribute('aria-expanded', 'false');
+}
+
+function closeAllHelp(exceptTrigger = null) {
+  document.querySelectorAll('[data-help-trigger][aria-expanded="true"]').forEach(trigger => {
+    if (trigger !== exceptTrigger) closeHelp(trigger);
+  });
+}
+
+function toggleHelp(trigger) {
+  const shouldOpen = trigger.getAttribute('aria-expanded') !== 'true';
+  closeAllHelp(trigger);
+  trigger.setAttribute('aria-expanded', String(shouldOpen));
 }
 
 function setTokenVisibility(isVisible) {
@@ -47,21 +93,54 @@ function setTokenVisibility(isVisible) {
   button.replaceChildren(icon(isVisible ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'));
 }
 
-function appendRef(map, name, sha) {
-  if (!name || !sha) return;
-  if (!map.has(name)) map.set(name, new Set());
-  map.get(name).add(sha);
-}
-
 function getRunsLimit() {
   const input = $('runs-limit');
-  const rawValue = Number.parseInt(input.value, 10);
-  const normalizedValue = Number.isFinite(rawValue)
-    ? Math.max(100, Math.ceil(rawValue / 100) * 100)
-    : 100;
+  const normalizedValue = normalizeRunsLimit(input.value);
 
   input.value = normalizedValue;
   return normalizedValue;
+}
+
+function getPollIntervalMs() {
+  return normalizePollIntervalMs($('poll-interval').value);
+}
+
+function clearPollTimer() {
+  if (!pollTimerId) return;
+  clearTimeout(pollTimerId);
+  pollTimerId = null;
+}
+
+function shouldSchedulePoll() {
+  return (
+    hasLoadedResults &&
+    !isLoading &&
+    getToken() &&
+    isPollingEnabled($('poll-interval').value) &&
+    !document.hidden
+  );
+}
+
+function scheduleNextPoll() {
+  clearPollTimer();
+  if (!shouldSchedulePoll()) return;
+
+  pollTimerId = setTimeout(() => {
+    pollTimerId = null;
+    loadData(false, { showErrors: false });
+  }, getPollIntervalMs());
+}
+
+function renderPollIntervalOptions() {
+  $('poll-interval').replaceChildren(
+    ...POLL_INTERVAL_OPTIONS.map(option => {
+      const el = document.createElement('option');
+      el.value = option.value;
+      el.textContent = option.label;
+      el.selected = option.ms === DEFAULT_POLL_INTERVAL_MS;
+      return el;
+    })
+  );
 }
 
 async function validateToken(token) {
@@ -94,21 +173,6 @@ async function loadLiveRefs(fullName) {
   } catch {
     return null;
   }
-}
-
-function resolveRunRefType(run, liveRefs) {
-  const branchMatches = liveRefs?.branchShasByName.get(run.head_branch)?.has(run.head_sha) ?? false;
-  const tagMatches = liveRefs?.tagShasByName.get(run.head_branch)?.has(run.head_sha) ?? false;
-
-  if (branchMatches && !tagMatches) return 'branch';
-  if (tagMatches && !branchMatches) return 'tag';
-
-  const hasBranchName = liveRefs?.branchShasByName.has(run.head_branch) ?? false;
-  const hasTagName = liveRefs?.tagShasByName.has(run.head_branch) ?? false;
-
-  if (hasBranchName && !hasTagName) return 'branch';
-  if (hasTagName && !hasBranchName) return 'tag';
-  return 'unknown';
 }
 
 async function fetchAll() {
@@ -161,21 +225,31 @@ async function fetchAll() {
   return (await pool(tasks)).filter(Boolean);
 }
 
-async function loadData(force = false) {
+async function loadData(force = false, { showErrors = true } = {}) {
   if (isLoading && !force) return;
-  if (!getToken()) return alert('Enter a GitHub token first.');
+  if (!getToken()) {
+    if (showErrors) alert('Enter a GitHub token first.');
+    return;
+  }
 
+  clearPollTimer();
   setLoadingState(true);
 
   try {
     const results = await fetchAll();
     clearResultsView();
     renderResults(results);
+    hasLoadedResults = true;
   } catch (e) {
     console.error(e);
-    alert('Error: ' + e.message);
+    if (showErrors) {
+      alert('Error: ' + e.message);
+    } else {
+      setTokenStatus(e.message, 'error');
+    }
   } finally {
     setLoadingState(false);
+    scheduleNextPoll();
   }
 }
 
@@ -183,16 +257,17 @@ async function validateAndLoad() {
   if (isLoading) return;
   const val = $('token').value.trim();
   if (!val) return alert('Enter a GitHub token first.');
+  clearPollTimer();
   setLoadingState(true);
 
   try {
     await validateToken(val);
     setToken(val);
     localStorage.setItem('github_token', val);
-    setTokenStatus('✓ Token was accepted by GitHub.', 'var(--green)');
+    setTokenStatus('Token was accepted by GitHub.');
     await loadData(true);
   } catch (e) {
-    setTokenStatus(`✗ ${e.message}`, 'var(--red)');
+    setTokenStatus(e.message, 'error');
     setLoadingState(false);
   }
 }
@@ -213,7 +288,7 @@ function toggleAll() {
   );
 }
 
-function handleClearToken() {
+function handleClear() {
   if (!confirm('Clear saved token?')) return;
   localStorage.removeItem('github_token');
   setToken('');
@@ -223,12 +298,29 @@ function handleClearToken() {
   resetResultsView();
 }
 
+renderPollIntervalOptions();
+
 $('btn-load').addEventListener('click', validateAndLoad);
-$('btn-clear-token').addEventListener('click', handleClearToken);
+$('btn-clear').addEventListener('click', handleClear);
 $('btn-toggle-token').addEventListener('click', () => {
   setTokenVisibility($('token').type === 'password');
 });
+document.querySelectorAll('[data-help-trigger]').forEach(trigger => {
+  trigger.addEventListener('click', e => {
+    e.stopPropagation();
+    toggleHelp(trigger);
+  });
+});
+$('poll-interval').addEventListener('change', scheduleNextPoll);
 $('toggle-all').addEventListener('click', toggleAll);
+
+document.addEventListener('visibilitychange', scheduleNextPoll);
+document.addEventListener('click', e => {
+  if (!e.target.closest('.help-container')) closeAllHelp();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeAllHelp();
+});
 
 $('token').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !isLoading) validateAndLoad();
@@ -238,5 +330,5 @@ const savedToken = localStorage.getItem('github_token') || '';
 if (savedToken) {
   setToken(savedToken);
   $('token').value = savedToken;
-  setTokenStatus('✓ Token is loaded from storage.', 'var(--green)');
+  setTokenStatus('Token is loaded from storage.');
 }

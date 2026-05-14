@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GitHub Workflow Dashboard</title>
+    <title>GitHub workflow dashboard</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
@@ -13,27 +13,93 @@
     <div class="container">
       <header>
         <div>
-          <h1><i class="fa-brands fa-github"></i> Workflow Dashboard</h1>
+          <h1><i class="fa-brands fa-github"></i> workflow dashboard</h1>
           <p>All GitHub Actions workflows at a glance.</p>
         </div>
         <div class="header-actions">
-          <div class="control-with-note">
-            <label class="runs-limit" for="runs-limit">
-              <span>Runs per repo</span>
-              <input id="runs-limit" type="number" min="100" step="100" value="100" />
+          <div class="setting-field runs-limit">
+            <label class="setting-label" for="runs-limit">
+              <span class="label-with-help">
+                <span>Runs per repo</span>
+                <span class="help-container">
+                  <button
+                    class="help-trigger"
+                    type="button"
+                    aria-label="Runs per repo help"
+                    aria-expanded="false"
+                    aria-controls="runs-limit-help"
+                    data-help-trigger
+                  >
+                    <i class="fa-regular fa-circle-question"></i>
+                  </button>
+                  <span id="runs-limit-help" class="help-popover" role="tooltip">
+                    <span>More runs means slower load and higher rate-limit risk.</span>
+                    <span>Fewer runs may hide older last runs.</span>
+                  </span>
+                </span>
+              </span>
             </label>
-            <p class="control-note">
-              More runs = slower load and higher rate-limit risk.<br />
-              Fewer runs may hide older last runs.
-            </p>
+            <input id="runs-limit" type="number" min="100" step="100" value="100" />
           </div>
-          <button class="btn btn-danger" id="btn-clear-token">
-            <i class="fa-solid fa-trash-can"></i> Clear token
-          </button>
+          <div class="setting-field poll-interval">
+            <label class="setting-label" for="poll-interval">Auto-reload</label>
+            <select id="poll-interval"></select>
+          </div>
         </div>
       </header>
 
-      <label class="field-label" for="token">GitHub token</label>
+      <div class="field-label-row">
+        <label class="field-label" for="token">GitHub token</label>
+        <span class="help-container">
+          <button
+            class="help-trigger"
+            type="button"
+            aria-label="GitHub token help"
+            aria-expanded="false"
+            aria-controls="token-help"
+            data-help-trigger
+          >
+            <i class="fa-regular fa-circle-question"></i>
+          </button>
+          <span id="token-help" class="help-popover help-popover-wide" role="tooltip">
+            <span class="token-note-line">Data is stored in your browser only.</span>
+            <span class="token-note-line">
+              <a
+                href="https://github.com/settings/personal-access-tokens"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Fine-grained PAT:
+              </a>
+              <span class="token-note-token"><code>Metadata: read</code>,</span>
+              <span class="token-note-token"><code>Actions: read</code>,</span>
+              <span class="token-note-token"><code>Contents: read</code>.</span>
+            </span>
+            <span class="token-note-line">
+              <a
+                href="https://github.com/settings/tokens"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Classic PAT:
+              </a>
+              <span class="token-note-token"><code>repo</code>.</span>
+            </span>
+          </span>
+        </span>
+        <span id="token-status-container" class="help-container hidden">
+          <button
+            id="token-status"
+            class="help-trigger status-trigger"
+            type="button"
+            aria-label="Token status"
+            aria-expanded="false"
+            aria-controls="token-status-help"
+            data-help-trigger
+          ></button>
+          <span id="token-status-help" class="help-popover" role="tooltip"></span>
+        </span>
+      </div>
       <div class="token-bar">
         <div class="token-input">
           <input id="token" type="password" placeholder="ghp_..." />
@@ -51,31 +117,10 @@
         <button class="btn btn-primary" id="btn-load">
           <i class="fa-solid fa-arrow-right"></i> Load
         </button>
+        <button class="btn btn-danger" id="btn-clear">
+          <i class="fa-solid fa-trash-can"></i> Clear
+        </button>
       </div>
-      <p class="control-note token-note">
-        Data is stored in your browser only.<br />
-        <a
-          href="https://github.com/settings/personal-access-tokens"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Fine-grained PAT
-        </a>
-        :
-        <code>Metadata: read</code>, <code>Actions: read</code>, <code>Contents: read</code>.<br />
-        <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer">
-          Classic PAT
-        </a>
-        :
-        <code>repo</code>.
-      </p>
-      <p id="token-status"></p>
-
-      <div id="loading" class="hidden">
-        <i class="fa-solid fa-circle-notch fa-spin"></i>
-        <p>Loading repositories and workflows…</p>
-      </div>
-
       <div id="content" class="hidden">
         <div class="stats-bar">
           <span id="stats"></span>

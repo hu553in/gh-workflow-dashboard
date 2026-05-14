@@ -13,6 +13,7 @@ It runs entirely in the browser.
 - Shows each run's status, event type, branch, timestamp, and a link to GitHub
 - Supports a collapsible tree grouped by repository and workflow
 - Provides summary statistics, including total repositories, workflows, and workflow counts by run state
+- Supports optional auto-reload intervals with ETag-based conditional GitHub API requests
 - Stores the token in browser `localStorage` and sends it only to the GitHub API
 
 ## Usage
@@ -37,7 +38,8 @@ pnpm dev
 ## Development
 
 ```bash
-pnpm check      # ESLint + Stylelint
+pnpm test       # Tests
+pnpm check      # Tests + ESLint + Stylelint
 pnpm check:fix  # Automatically fixes lint issues
 pnpm build      # Production build (Vite -> dist/)
 ```

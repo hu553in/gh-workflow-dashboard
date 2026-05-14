@@ -16,11 +16,15 @@ function link(url, className, text) {
   return el;
 }
 
+export function setButtonLabel(buttonId, iconClass, label) {
+  $(buttonId).replaceChildren(icon(iconClass), document.createTextNode(label));
+}
+
 function setToggleAllButton(isAllOpen) {
-  const button = $('toggle-all');
-  button.replaceChildren(
-    icon(isAllOpen ? 'fa-solid fa-angles-up' : 'fa-solid fa-angles-down'),
-    document.createTextNode(isAllOpen ? ' Collapse all' : ' Expand all')
+  setButtonLabel(
+    'toggle-all',
+    isAllOpen ? 'fa-solid fa-angles-up' : 'fa-solid fa-angles-down',
+    isAllOpen ? 'Collapse all' : 'Expand all'
   );
 }
 
@@ -30,13 +34,13 @@ function updateToggleAllButton() {
   setToggleAllButton(isAllOpen);
 }
 
-function repoSortRank(repo) {
+export function repoSortRank(repo) {
   if (repo.fork) return 2;
   if (repo.private) return 1;
   return 0;
 }
 
-const runViews = {
+export const runViews = {
   success: {
     mod: 'success',
     label: 'success',
@@ -117,7 +121,7 @@ const runViews = {
   },
 };
 
-const statusViews = {
+export const statusViews = {
   queued: runViews.queued,
   requested: { ...runViews.queued, label: 'requested' },
   waiting: { ...runViews.queued, label: 'waiting' },
@@ -126,7 +130,7 @@ const statusViews = {
   completed: runViews.completed,
 };
 
-const conclusionViews = {
+export const conclusionViews = {
   success: runViews.success,
   failure: runViews.failure,
   action_required: runViews.actionRequired,
@@ -137,9 +141,15 @@ const conclusionViews = {
   stale: runViews.stale,
 };
 
-function runView(run) {
+export function runView(run) {
   if (!run) return runViews.none;
   if (run.conclusion && conclusionViews[run.conclusion]) return conclusionViews[run.conclusion];
+  if (run.conclusion) {
+    return {
+      ...runViews.other,
+      label: run.conclusion,
+    };
+  }
   if (statusViews[run.status]) return statusViews[run.status];
 
   return {
@@ -151,8 +161,12 @@ function runView(run) {
 function badge(run) {
   const el = document.createElement('span');
   const view = runView(run);
+  const label = document.createElement('span');
+
+  label.className = 'badge-label';
+  label.textContent = view.label;
   el.classList.add('badge', `badge-${view.mod}`);
-  el.append(icon(view.iconClass), document.createTextNode(view.label));
+  el.append(icon(view.iconClass), label);
   return el;
 }
 
@@ -165,7 +179,7 @@ function stateIcon(state) {
 }
 
 function timeStr(run) {
-  if (!run) return '—';
+  if (!run) return '-';
   return new Date(run.created_at).toLocaleString('en-US', {
     day: 'numeric',
     month: 'short',
@@ -174,7 +188,7 @@ function timeStr(run) {
   });
 }
 
-function groupRunsByWorkflow(latestRuns) {
+export function groupRunsByWorkflow(latestRuns) {
   const runsByWorkflow = new Map();
 
   for (const run of Object.values(latestRuns)) {
@@ -191,13 +205,37 @@ function groupRunsByWorkflow(latestRuns) {
   return runsByWorkflow;
 }
 
+export function countWorkflowRuns(workflows, runsByWorkflow) {
+  const counts = {
+    pass: 0,
+    fail: 0,
+    running: 0,
+    queued: 0,
+    other: 0,
+  };
+
+  for (const wf of workflows) {
+    const runs = runsByWorkflow.get(wf.id) || [];
+    if (!runs.length) {
+      counts.other++;
+      continue;
+    }
+
+    for (const run of runs) {
+      counts[runView(run).countKey]++;
+    }
+  }
+
+  return counts;
+}
+
 function renderRunRow(run) {
   const row = document.createElement('div');
   row.className = 'run-row';
 
   const source = document.createElement('span');
   source.className = 'wf-source';
-  source.textContent = run ? `${run.event} · ${run.head_branch}` : '—';
+  source.textContent = run ? `${run.event} - ${run.head_branch}` : '-';
 
   const right = document.createElement('div');
   right.className = 'run-right';
@@ -248,25 +286,7 @@ function renderWorkflowGroup(wf, runsByWorkflow) {
 
 function renderRepo(repo, workflows, latestRuns) {
   const runsByWorkflow = groupRunsByWorkflow(latestRuns);
-  const counts = {
-    pass: 0,
-    fail: 0,
-    running: 0,
-    queued: 0,
-    other: 0,
-  };
-
-  for (const wf of workflows) {
-    const runs = runsByWorkflow.get(wf.id) || [];
-    if (!runs.length) {
-      counts.other++;
-      continue;
-    }
-
-    for (const run of runs) {
-      counts[runView(run).countKey]++;
-    }
-  }
+  const counts = countWorkflowRuns(workflows, runsByWorkflow);
 
   const repoEl = document.createElement('div');
   repoEl.className = 'repo';
@@ -369,7 +389,7 @@ export function renderResults(results) {
   const wfCount = document.createElement('strong');
   wfCount.textContent = totalWf;
 
-  stats.append(repoCount, ' repositories · ', wfCount, ' workflows');
+  stats.append(repoCount, ' repositories - ', wfCount, ' workflows');
 
   $('repos').replaceChildren(
     ...sortedResults.map(r => renderRepo(r.repo, r.workflows, r.latestRuns))
