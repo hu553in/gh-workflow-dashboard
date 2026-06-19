@@ -31,5 +31,9 @@
   "browserslist": [
     "defaults",
     "fully supports es6-module"
-  ]
+  ],
+  "dependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2"
+  }
 }
