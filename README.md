@@ -1,11 +1,12 @@
 # GitHub workflow dashboard
 
+[![CI](https://github.com/hu553in/gh-workflow-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/hu553in/gh-workflow-dashboard/actions/workflows/ci.yml)
 [![Vercel Deploy](https://deploy-badge.vercel.app/vercel/gh-workflow-dashboard)](https://gh-workflow-dashboard.vercel.app/)
 
 A client-side dashboard for monitoring GitHub Actions workflows across repositories. It runs
 entirely in the browser.
 
-## Features
+## What it does
 
 - Fetches all repositories and workflows available to the authenticated user through the GitHub REST
   API
@@ -18,24 +19,32 @@ entirely in the browser.
 - Supports optional auto-reload intervals with ETag-based conditional GitHub API requests
 - Stores the token in browser `localStorage` and sends it only to the GitHub API
 
-## Usage
+## Requirements
 
-Open the [deployed app](https://gh-workflow-dashboard.vercel.app/), enter a GitHub personal access
-token, and click **Load**.
+- Node.js and pnpm for local development
+- A GitHub personal access token for the repositories you want to inspect
 
 Required token scopes:
 
 - [Fine-grained PAT](https://github.com/settings/personal-access-tokens): `Metadata: read`,
   `Actions: read`, `Contents: read`
-- [Classic PAT](https://github.com/settings/tokens): `repo` (broad access; prefer a fine-grained PAT
-  when possible)
+- [Classic PAT](https://github.com/settings/tokens): `repo`; prefer a fine-grained PAT when possible
 
-To run the app locally:
+## Setup
 
 ```bash
 pnpm i
 pnpm dev
 ```
+
+Open <http://localhost:5173>.
+
+## Usage
+
+Open the [deployed app](https://gh-workflow-dashboard.vercel.app/), enter a GitHub personal access
+token, and click **Load**.
+
+The token stays in `localStorage` and is used only for requests to `https://api.github.com`.
 
 ## Development
 
@@ -45,6 +54,13 @@ pnpm check      # Tests + ESLint + Stylelint
 pnpm check:fix  # Automatically fixes lint issues
 pnpm build      # Production build (Vite -> dist/)
 ```
+
+## Runtime behavior
+
+- The app is a static Vite build with no backend service
+- GitHub API requests use version `2022-11-28`
+- Cached ETags are stored in memory and reset when the token changes
+- The production build is written to `dist/`
 
 ## Tech stack
 
