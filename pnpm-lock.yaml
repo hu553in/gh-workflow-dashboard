@@ -7,14 +7,13 @@ settings:
 importers:
 
   .:
-    dependencies:
+    devDependencies:
       '@commitlint/cli':
         specifier: ^21.2.0
         version: 21.2.0(@types/node@26.0.1)(typescript@6.0.3)
       '@commitlint/config-conventional':
         specifier: ^21.2.0
         version: 21.2.0
-    devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.6.0(jiti@2.6.1))
