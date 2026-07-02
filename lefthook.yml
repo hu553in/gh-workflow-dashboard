@@ -28,6 +28,9 @@ pre-commit:
 
 check:
   jobs:
+    - name: prettier
+      run: pnpm exec prettier -u --check .
+
     - name: eslint
       run: pnpm exec eslint . --max-warnings=0
 
