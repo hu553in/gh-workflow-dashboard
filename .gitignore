@@ -4,8 +4,13 @@ node_modules/
 build/
 dist/
 out/
+coverage/
 .vscode/
+.idea/
+*.iml
 *.pem
 *.log
 .env*
+!.env.example
+!.env.example.*
 *.tsbuildinfo

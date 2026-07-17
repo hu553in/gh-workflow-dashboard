@@ -1,5 +1,5 @@
 {
-  "extends": ["stylelint-config-recommended", "stylelint-config-standard"],
+  "extends": ["stylelint-config-standard"],
   "reportDescriptionlessDisables": true,
   "reportInvalidScopeDisables": true,
   "reportNeedlessDisables": true,
