@@ -21,7 +21,7 @@ entirely in the browser.
 
 ## Requirements
 
-- Node.js and pnpm for local development
+- Bun 1.3.14 for local development
 - A GitHub personal access token for the repositories you want to inspect
 
 Required token scopes:
@@ -33,8 +33,8 @@ Required token scopes:
 ## Setup
 
 ```bash
-pnpm i
-pnpm dev
+bun i
+bun dev
 ```
 
 Open <http://localhost:5173>.
@@ -46,15 +46,6 @@ token, and click **Load**.
 
 The token stays in `localStorage` and is used only for requests to `https://api.github.com`.
 
-## Development
-
-```bash
-pnpm test       # Tests
-pnpm check      # Tests + ESLint + Stylelint
-pnpm check:fix  # Automatically fixes lint issues
-pnpm build      # Production build (Vite -> dist/)
-```
-
 ## Runtime behavior
 
 - The app is a static Vite build with no backend service
@@ -62,8 +53,18 @@ pnpm build      # Production build (Vite -> dist/)
 - Cached ETags are stored in memory and reset when the token changes
 - The production build is written to `dist/`
 
+## Development
+
+```bash
+bun run test   # Tests
+bun check      # Full local gate
+bun check:fix  # Full local gate with automatic fixes
+bun run build  # Production build (Vite -> dist/)
+```
+
 ## Tech stack
 
 - Vanilla JavaScript
 - Vite
 - GitHub REST API `v2022-11-28`
+- Vitest, ESLint, Prettier, Stylelint, Knip

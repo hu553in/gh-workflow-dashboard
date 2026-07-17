@@ -1,14 +1,15 @@
 {
-  "tabWidth": 2,
-  "useTabs": false,
-  "printWidth": 100,
-  "singleQuote": true,
-  "trailingComma": "es5",
-  "bracketSpacing": true,
-  "semi": true,
-  "quoteProps": "as-needed",
-  "bracketSameLine": false,
+  "$schema": "https://json.schemastore.org/prettierrc",
   "arrowParens": "avoid",
+  "bracketSameLine": false,
+  "bracketSpacing": true,
   "endOfLine": "lf",
-  "proseWrap": "always"
+  "printWidth": 100,
+  "proseWrap": "always",
+  "quoteProps": "as-needed",
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "useTabs": false
 }

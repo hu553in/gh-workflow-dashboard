@@ -1,37 +1,40 @@
 {
   "name": "gh-workflow-dashboard",
-  "description": "A client-side dashboard for monitoring GitHub Actions workflows across repositories. It runs entirely in the browser.",
-  "author": "hu553in",
+  "version": "0.1.0",
+  "description": "A client-side dashboard for monitoring GitHub Actions workflows across repositories.",
+  "author": "Ruslan Khasanshin",
+  "repository": "https://github.com/hu553in/gh-workflow-dashboard",
+  "homepage": "https://gh-workflow-dashboard.vercel.app",
   "private": true,
-  "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "prettier -u -c . && eslint --max-warnings 0 . && stylelint --max-warnings 0 --ignore-path .gitignore '**/*.css'",
+    "lint:fix": "prettier -u -w . && eslint --max-warnings 0 --fix . && stylelint --max-warnings 0 --fix --ignore-path .gitignore '**/*.css'",
+    "check:workflows": "bunx github-actionlint",
+    "check:unused": "knip",
+    "check:vulns": "bun audit --prod --audit-level=high",
+    "check": "bun lint && bun check:workflows && bun run build && bun check:unused && bun check:vulns && bun test:coverage",
+    "check:fix": "bun lint:fix && bun check",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "prepare": "if [ -n \"${CI:-}\" ] || [ \"${LEFTHOOK:-}\" = \"0\" ]; then exit 0; fi; lefthook install"
+  },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.0",
-    "@commitlint/config-conventional": "^21.2.0",
     "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-simple-import-sort": "^13.0.0",
     "globals": "^17.7.0",
+    "knip": "^6.26.0",
     "lefthook": "^2.1.9",
     "prettier": "^3.9.4",
     "stylelint": "^17.14.0",
-    "stylelint-config-recommended": "^18.0.0",
     "stylelint-config-standard": "^40.0.0",
     "vite": "^8.1.2",
     "vitest": "^4.1.9"
   },
-  "scripts": {
-    "build": "vite build",
-    "dev": "vite",
-    "test": "vitest run --passWithNoTests",
-    "check": "lefthook run check --all-files --force",
-    "check:fix": "lefthook run check-fix --all-files --force",
-    "prepare": "command -v lefthook && lefthook install || true"
-  },
-  "browserslist": [
-    "defaults",
-    "fully supports es6-module"
-  ]
+  "packageManager": "bun@1.3.14"
 }

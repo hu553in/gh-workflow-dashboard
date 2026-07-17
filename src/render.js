@@ -40,7 +40,7 @@ export function repoSortRank(repo) {
   return 0;
 }
 
-export const runViews = {
+const runViews = {
   success: {
     mod: 'success',
     label: 'success',
@@ -121,7 +121,7 @@ export const runViews = {
   },
 };
 
-export const statusViews = {
+const statusViews = {
   queued: runViews.queued,
   requested: { ...runViews.queued, label: 'requested' },
   waiting: { ...runViews.queued, label: 'waiting' },
@@ -130,7 +130,7 @@ export const statusViews = {
   completed: runViews.completed,
 };
 
-export const conclusionViews = {
+const conclusionViews = {
   success: runViews.success,
   failure: runViews.failure,
   action_required: runViews.actionRequired,

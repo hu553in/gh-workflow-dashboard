@@ -1,16 +1,11 @@
 import js from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
-import prettierPlugin from 'eslint-plugin-prettier';
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
 
-const sharedGlobals = {
-  ...globals.browser,
-  ...globals.node,
-};
-
 export default defineConfig(
-  globalIgnores(['**/build/**', '**/node_modules/**', '**/dist/**']),
+  globalIgnores(['**/build/**', '**/dist/**']),
   {
     linterOptions: {
       reportUnusedDisableDirectives: 'error',
@@ -19,19 +14,27 @@ export default defineConfig(
   {
     files: ['**/*.js'],
     extends: [js.configs.recommended],
-    languageOptions: {
-      globals: sharedGlobals,
-    },
     plugins: {
-      prettier: prettierPlugin,
       'simple-import-sort': simpleImportSortPlugin,
     },
     rules: {
-      'prettier/prettier': 'error',
       'no-console': ['error', { allow: ['error'] }],
       'prefer-const': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
     },
-  }
+  },
+  {
+    files: ['src/**/*.js'],
+    languageOptions: {
+      globals: globals.browser,
+    },
+  },
+  {
+    files: ['*.config.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  eslintConfigPrettier
 );
