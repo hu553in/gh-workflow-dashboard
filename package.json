@@ -18,12 +18,13 @@
     "check": "bun lint && bun check:workflows && bun run build && bun check:unused && bun check:vulns && bun test:coverage",
     "check:fix": "bun lint:fix && bun check",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "bun run test --coverage",
     "prepare": "if [ -n \"${CI:-}\" ] || [ \"${LEFTHOOK:-}\" = \"0\" ]; then exit 0; fi; lefthook install"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/eslint-plugin": "^1.6.18",
     "eslint": "^10.7.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-simple-import-sort": "^14.0.0",

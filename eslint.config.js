@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import vitest from '@vitest/eslint-plugin';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
@@ -29,6 +30,10 @@ export default defineConfig(
     languageOptions: {
       globals: globals.browser,
     },
+  },
+  {
+    files: ['**/*.{test,spec}.{js,mjs,cjs}'],
+    extends: [vitest.configs.recommended],
   },
   {
     files: ['*.config.js'],
