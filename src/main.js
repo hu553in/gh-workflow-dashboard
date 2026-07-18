@@ -15,6 +15,7 @@ const $ = id => document.getElementById(id);
 let isLoading = false;
 let hasLoadedResults = false;
 let pollTimerId = null;
+let authenticatedUserLogin = null;
 
 function setTokenStatus(message = '', state = 'success') {
   const container = $('token-status-container');
@@ -144,7 +145,8 @@ function renderPollIntervalOptions() {
 }
 
 async function validateToken(token) {
-  await api('/user', token);
+  const { login } = await api('/user', token);
+  return login;
 }
 
 async function loadLiveRefs(fullName) {
@@ -238,7 +240,7 @@ async function loadData(force = false, { showErrors = true } = {}) {
   try {
     const results = await fetchAll();
     clearResultsView();
-    renderResults(results);
+    renderResults(results, authenticatedUserLogin);
     hasLoadedResults = true;
   } catch (e) {
     console.error(e);
@@ -261,7 +263,7 @@ async function validateAndLoad() {
   setLoadingState(true);
 
   try {
-    await validateToken(val);
+    authenticatedUserLogin = await validateToken(val);
     setToken(val);
     localStorage.setItem('github_token', val);
     setTokenStatus('Token was accepted by GitHub.');
@@ -292,6 +294,7 @@ function handleClear() {
   if (!confirm('Clear saved token?')) return;
   localStorage.removeItem('github_token');
   setToken('');
+  authenticatedUserLogin = null;
   $('token').value = '';
   setTokenVisibility(false);
   setTokenStatus();

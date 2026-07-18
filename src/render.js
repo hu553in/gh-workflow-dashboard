@@ -40,6 +40,21 @@ export function repoSortRank(repo) {
   return 0;
 }
 
+export function compareRepos(a, b, authenticatedUserLogin) {
+  const ownershipCompare =
+    Number(a.owner.login !== authenticatedUserLogin) -
+    Number(b.owner.login !== authenticatedUserLogin);
+  if (ownershipCompare !== 0) return ownershipCompare;
+
+  const rankCompare = repoSortRank(a) - repoSortRank(b);
+  if (rankCompare !== 0) return rankCompare;
+
+  const ownerCompare = a.owner.login.localeCompare(b.owner.login);
+  if (ownerCompare !== 0) return ownerCompare;
+
+  return a.full_name.localeCompare(b.full_name);
+}
+
 const runViews = {
   success: {
     mod: 'success',
@@ -369,14 +384,10 @@ function renderRepo(repo, workflows, latestRuns) {
   return repoEl;
 }
 
-export function renderResults(results) {
-  const sortedResults = [...results].sort((a, b) => {
-    const ownerCompare = a.repo.owner.login.localeCompare(b.repo.owner.login);
-    if (ownerCompare !== 0) return ownerCompare;
-    const rankCompare = repoSortRank(a.repo) - repoSortRank(b.repo);
-    if (rankCompare !== 0) return rankCompare;
-    return a.repo.full_name.localeCompare(b.repo.full_name);
-  });
+export function renderResults(results, authenticatedUserLogin) {
+  const sortedResults = [...results].sort((a, b) =>
+    compareRepos(a.repo, b.repo, authenticatedUserLogin)
+  );
 
   const totalWf = sortedResults.reduce((n, r) => n + r.workflows.length, 0);
 
