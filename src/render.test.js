@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
-import { countWorkflowRuns, groupRunsByWorkflow, repoSortRank, runView } from './render.js';
+import {
+  compareRepos,
+  countWorkflowRuns,
+  groupRunsByWorkflow,
+  repoSortRank,
+  runView,
+} from './render.js';
 
 describe('repoSortRank', () => {
   test('sorts public repos before private repos and forks', () => {
@@ -8,6 +14,50 @@ describe('repoSortRank', () => {
     expect(repoSortRank({ private: true, fork: false })).toBe(1);
     expect(repoSortRank({ private: false, fork: true })).toBe(2);
     expect(repoSortRank({ private: true, fork: true })).toBe(2);
+  });
+});
+
+describe('compareRepos', () => {
+  const repo = (fullName, options = {}) => ({
+    full_name: fullName,
+    owner: { login: fullName.split('/')[0] },
+    private: false,
+    fork: false,
+    ...options,
+  });
+
+  test('puts contributor repos after owned repos', () => {
+    const repos = [
+      repo('contributor/public'),
+      repo('owner/fork', { fork: true }),
+      repo('owner/private', { private: true }),
+      repo('owner/public'),
+    ];
+
+    expect(repos.sort((a, b) => compareRepos(a, b, 'owner')).map(item => item.full_name)).toEqual([
+      'owner/public',
+      'owner/private',
+      'owner/fork',
+      'contributor/public',
+    ]);
+  });
+
+  test('keeps public, private, fork, owner, and name sorting inside contributor repos', () => {
+    const repos = [
+      repo('zeta/fork', { fork: true }),
+      repo('beta/private', { private: true }),
+      repo('zeta/public'),
+      repo('alpha/z-last'),
+      repo('alpha/a-first'),
+    ];
+
+    expect(repos.sort((a, b) => compareRepos(a, b, 'owner')).map(item => item.full_name)).toEqual([
+      'alpha/a-first',
+      'alpha/z-last',
+      'zeta/public',
+      'beta/private',
+      'zeta/fork',
+    ]);
   });
 });
 
