@@ -21,7 +21,7 @@ entirely in the browser.
 
 ## Requirements
 
-- Bun 1.3.14 for local development
+- Bun for local development
 - A GitHub personal access token for the repositories you want to inspect
 
 Required token scopes:
