@@ -5,6 +5,7 @@ build/
 dist/
 out/
 coverage/
+.cache/
 .vscode/
 .idea/
 *.iml

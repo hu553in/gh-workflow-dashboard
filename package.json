@@ -10,8 +10,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "prettier -u -c . && eslint --max-warnings 0 . && stylelint --max-warnings 0 --ignore-path .gitignore '**/*.css'",
-    "lint:fix": "prettier -u -w . && eslint --max-warnings 0 --fix . && stylelint --max-warnings 0 --fix --ignore-path .gitignore '**/*.css'",
+    "lint": "prettier -u -c . && eslint --cache --cache-location .cache/eslint --cache-strategy content --max-warnings 0 . && stylelint --max-warnings 0 --ignore-path .gitignore '**/*.css'",
+    "lint:fix": "prettier -u -w . && eslint --cache --cache-location .cache/eslint --cache-strategy content --max-warnings 0 --fix . && stylelint --max-warnings 0 --fix --ignore-path .gitignore '**/*.css'",
     "check:hooks": "lefthook validate",
     "check:workflows": "bunx github-actionlint",
     "check:renovate": "bunx --package renovate renovate-config-validator --strict --no-global renovate.json",
@@ -39,5 +39,5 @@
     "vite": "^8.2.1",
     "vitest": "^4.1.10"
   },
-  "packageManager": "bun@1.3.14"
+  "packageManager": "bun@1.4.0"
 }
