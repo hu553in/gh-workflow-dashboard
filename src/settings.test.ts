@@ -6,7 +6,7 @@ import {
   normalizePollIntervalMs,
   normalizeRunsLimit,
   POLL_INTERVAL_OPTIONS,
-} from './settings.js';
+} from './settings';
 
 describe('poll interval settings', () => {
   test('defines the supported auto reload intervals with a one-minute default', () => {

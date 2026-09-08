@@ -56,15 +56,16 @@ The token stays in `localStorage` and is used only for requests to `https://api.
 ## Development
 
 ```bash
-bun run test   # Tests
-bun check      # Full local gate
-bun check:fix  # Full local gate with automatic fixes
-bun run build  # Production build (Vite -> dist/)
+bun run test    # Tests
+bun check:types # TypeScript checks
+bun check       # Full local gate
+bun check:fix   # Full local gate with automatic fixes
+bun run build   # Production build (Vite -> dist/)
 ```
 
 ## Tech stack
 
-- Vanilla JavaScript
+- Vanilla TypeScript
 - Vite
 - GitHub REST API `v2022-11-28`
 - Vitest, ESLint, Prettier, Stylelint, Knip

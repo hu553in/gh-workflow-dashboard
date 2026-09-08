@@ -19,16 +19,16 @@ const pollIntervalsByValue = new Map(
   POLL_INTERVAL_OPTIONS.map(option => [option.value, option.ms])
 );
 
-export function normalizePollIntervalMs(value) {
+export function normalizePollIntervalMs(value: string | number) {
   const key = String(value);
-  return pollIntervalsByValue.has(key) ? pollIntervalsByValue.get(key) : DEFAULT_POLL_INTERVAL_MS;
+  return pollIntervalsByValue.get(key) ?? DEFAULT_POLL_INTERVAL_MS;
 }
 
-export function isPollingEnabled(value) {
+export function isPollingEnabled(value: string | number) {
   return normalizePollIntervalMs(value) > 0;
 }
 
-export function normalizeRunsLimit(value) {
+export function normalizeRunsLimit(value: string) {
   const parsedValue = Number.parseInt(value, 10);
   return Number.isFinite(parsedValue) ? Math.max(100, Math.ceil(parsedValue / 100) * 100) : 100;
 }

@@ -1,10 +1,22 @@
-export function appendRef(map, name, sha) {
-  if (!name || !sha) return;
-  if (!map.has(name)) map.set(name, new Set());
-  map.get(name).add(sha);
+import type { WorkflowRun } from './types';
+
+export interface LiveRefs {
+  names: Set<string>;
+  branchShasByName: Map<string, Set<string>>;
+  tagShasByName: Map<string, Set<string>>;
 }
 
-export function resolveRunRefType(run, liveRefs) {
+export function appendRef(map: Map<string, Set<string>>, name: string, sha: string | undefined) {
+  if (!name || !sha) return;
+  const shas = map.get(name) ?? new Set<string>();
+  shas.add(sha);
+  map.set(name, shas);
+}
+
+export function resolveRunRefType(
+  run: Pick<WorkflowRun, 'head_branch' | 'head_sha'>,
+  liveRefs: Pick<LiveRefs, 'branchShasByName' | 'tagShasByName'> | null
+) {
   const branchMatches = liveRefs?.branchShasByName.get(run.head_branch)?.has(run.head_sha) ?? false;
   const tagMatches = liveRefs?.tagShasByName.get(run.head_branch)?.has(run.head_sha) ?? false;
 

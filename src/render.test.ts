@@ -6,7 +6,8 @@ import {
   groupRunsByWorkflow,
   repoSortRank,
   runView,
-} from './render.js';
+} from './render';
+import type { Repository } from './types';
 
 describe('repoSortRank', () => {
   test('sorts public repos before private repos and forks', () => {
@@ -18,9 +19,10 @@ describe('repoSortRank', () => {
 });
 
 describe('compareRepos', () => {
-  const repo = (fullName, options = {}) => ({
+  const repo = (fullName: string, options: Partial<Repository> = {}): Repository => ({
     full_name: fullName,
-    owner: { login: fullName.split('/')[0] },
+    html_url: `https://github.com/${fullName}`,
+    owner: { login: fullName.split('/')[0] ?? '', avatar_url: 'https://github.com/owner.png' },
     private: false,
     fork: false,
     ...options,
@@ -161,7 +163,7 @@ describe('groupRunsByWorkflow', () => {
       c: { workflow_id: 2, created_at: '2026-05-14T00:02:00Z' },
     });
 
-    expect(grouped.get(1).map(run => run.created_at)).toEqual([
+    expect(grouped.get(1)?.map(run => run.created_at)).toEqual([
       '2026-05-14T00:01:00Z',
       '2026-05-14T00:00:00Z',
     ]);

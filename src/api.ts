@@ -1,15 +1,20 @@
 const GITHUB_API_BASE_URL = 'https://api.github.com';
 
-function getErrorMessage(status) {
-  return status === 403 ? 'Rate limit or insufficient permissions' : `API ${status}`;
+function getErrorMessage(status: number) {
+  return status === 403 ? 'Rate limit or insufficient permissions' : `API ${String(status)}`;
 }
 
-function makeCacheKey(url, authToken) {
+function makeCacheKey(url: string, authToken: string) {
   return `${authToken}\n${url}`;
 }
 
-function makeHeaders(authToken, cacheEntry) {
-  const headers = {
+interface CacheEntry {
+  etag: string;
+  data: unknown;
+}
+
+function makeHeaders(authToken: string, cacheEntry: CacheEntry | undefined) {
+  const headers: Record<string, string> = {
     Authorization: `Bearer ${authToken}`,
     Accept: 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
@@ -22,9 +27,9 @@ function makeHeaders(authToken, cacheEntry) {
 export function createApiClient({
   baseUrl = GITHUB_API_BASE_URL,
   fetchImpl = globalThis.fetch,
-} = {}) {
+}: { baseUrl?: string; fetchImpl?: typeof fetch } = {}) {
   let token = '';
-  const cache = new Map();
+  const cache = new Map<string, CacheEntry>();
 
   function clearCache() {
     cache.clear();
@@ -34,12 +39,12 @@ export function createApiClient({
     return token;
   }
 
-  function setToken(nextToken) {
+  function setToken(nextToken: string) {
     if (nextToken !== token) clearCache();
     token = nextToken;
   }
 
-  async function api(path, authToken = token) {
+  async function request(path: string, authToken: string): Promise<unknown> {
     const url = `${baseUrl}${path}`;
     const cacheKey = makeCacheKey(url, authToken);
     const cacheEntry = cache.get(cacheKey);
@@ -56,7 +61,7 @@ export function createApiClient({
       throw new Error(getErrorMessage(res.status));
     }
 
-    const data = await res.json();
+    const data: unknown = await res.json();
     const etag = res.headers.get('ETag');
 
     if (etag) {
@@ -68,13 +73,25 @@ export function createApiClient({
     return data;
   }
 
-  async function paginate(path, select = data => data, authToken = token, limit = Infinity) {
-    const all = [];
+  async function api<T = unknown>(path: string, authToken = token): Promise<T> {
+    // GitHub response contracts are declared at each endpoint call.
+    return (await request(path, authToken)) as T;
+  }
+
+  async function paginate<T, TResponse = T[]>(
+    path: string,
+    ...[select, authToken = token, limit = Infinity]: TResponse extends T[]
+      ? [select?: (data: TResponse) => T[], authToken?: string, limit?: number]
+      : [select: (data: TResponse) => T[], authToken?: string, limit?: number]
+  ): Promise<T[]> {
+    const all: T[] = [];
     let page = 1;
-    while (true) {
+    for (;;) {
       const sep = path.includes('?') ? '&' : '?';
-      const data = await api(`${path}${sep}per_page=100&page=${page}`, authToken);
-      const pageItems = select(data);
+      const pagePath = `${path}${sep}per_page=100&page=${String(page)}`;
+      const pageItems = select
+        ? select(await api<TResponse>(pagePath, authToken))
+        : await api<T[]>(pagePath, authToken);
       const remaining = limit - all.length;
       all.push(...pageItems.slice(0, remaining));
       if (all.length >= limit || pageItems.length < 100) return all;
@@ -97,29 +114,19 @@ export function getToken() {
   return defaultClient.getToken();
 }
 
-export function setToken(t) {
+export function setToken(t: string) {
   defaultClient.setToken(t);
 }
 
-export async function api(path, authToken = getToken()) {
-  return defaultClient.api(path, authToken);
-}
+export const api = defaultClient.api;
+export const paginate = defaultClient.paginate;
 
-export async function paginate(
-  path,
-  select = data => data,
-  authToken = getToken(),
-  limit = Infinity
-) {
-  return defaultClient.paginate(path, select, authToken, limit);
-}
-
-export async function pool(tasks, concurrency = 8) {
-  const results = [];
-  const active = [];
+export async function pool<T>(tasks: (() => Promise<T>)[], concurrency = 8) {
+  const results: Promise<T>[] = [];
+  const active: Promise<T>[] = [];
   for (const task of tasks) {
     const p = task().finally(() => {
-      active.splice(active.indexOf(p), 1);
+      void active.splice(active.indexOf(p), 1);
     });
     active.push(p);
     results.push(p);

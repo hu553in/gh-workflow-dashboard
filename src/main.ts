@@ -1,21 +1,23 @@
 import './style.css';
 
-import { api, getToken, paginate, pool, setToken } from './api.js';
-import { appendRef, resolveRunRefType } from './refs.js';
-import { icon, renderResults, setButtonLabel } from './render.js';
+import { api, getToken, paginate, pool, setToken } from './api';
+import { button, element as $, input, select } from './dom';
+import type { LiveRefs } from './refs';
+import { appendRef, resolveRunRefType } from './refs';
+import { icon, renderResults, setButtonLabel } from './render';
 import {
   DEFAULT_POLL_INTERVAL_MS,
   isPollingEnabled,
   normalizePollIntervalMs,
   normalizeRunsLimit,
   POLL_INTERVAL_OPTIONS,
-} from './settings.js';
+} from './settings';
+import type { GitRef, Repository, Workflow, WorkflowRun } from './types';
 
-const $ = id => document.getElementById(id);
 let isLoading = false;
 let hasLoadedResults = false;
-let pollTimerId = null;
-let authenticatedUserLogin = null;
+let pollTimerId: ReturnType<typeof setTimeout> | null = null;
+let authenticatedUserLogin: string | null = null;
 
 function setTokenStatus(message = '', state = 'success') {
   const container = $('token-status-container');
@@ -38,20 +40,20 @@ function setTokenStatus(message = '', state = 'success') {
   popover.textContent = message;
 }
 
-function setLoadingState(nextIsLoading) {
+function setLoadingState(nextIsLoading: boolean) {
   isLoading = nextIsLoading;
-  $('btn-load').disabled = nextIsLoading;
+  button('btn-load').disabled = nextIsLoading;
   setButtonLabel(
     'btn-load',
     nextIsLoading ? 'fa-solid fa-circle-notch fa-spin' : 'fa-solid fa-arrow-right',
     'Load'
   );
-  $('btn-clear').disabled = nextIsLoading;
-  $('btn-toggle-token').disabled = nextIsLoading;
-  $('toggle-all').disabled = nextIsLoading;
-  $('token').readOnly = nextIsLoading;
-  $('runs-limit').disabled = nextIsLoading;
-  $('poll-interval').disabled = nextIsLoading;
+  button('btn-clear').disabled = nextIsLoading;
+  button('btn-toggle-token').disabled = nextIsLoading;
+  button('toggle-all').disabled = nextIsLoading;
+  input('token').readOnly = nextIsLoading;
+  input('runs-limit').disabled = nextIsLoading;
+  select('poll-interval').disabled = nextIsLoading;
 }
 
 function clearResultsView() {
@@ -69,25 +71,25 @@ function resetResultsView() {
   clearResultsView();
 }
 
-function closeHelp(trigger) {
+function closeHelp(trigger: Element) {
   trigger.setAttribute('aria-expanded', 'false');
 }
 
-function closeAllHelp(exceptTrigger = null) {
+function closeAllHelp(exceptTrigger: Element | null = null) {
   document.querySelectorAll('[data-help-trigger][aria-expanded="true"]').forEach(trigger => {
     if (trigger !== exceptTrigger) closeHelp(trigger);
   });
 }
 
-function toggleHelp(trigger) {
+function toggleHelp(trigger: Element) {
   const shouldOpen = trigger.getAttribute('aria-expanded') !== 'true';
   closeAllHelp(trigger);
   trigger.setAttribute('aria-expanded', String(shouldOpen));
 }
 
-function setTokenVisibility(isVisible) {
+function setTokenVisibility(isVisible: boolean) {
   const button = $('btn-toggle-token');
-  $('token').type = isVisible ? 'text' : 'password';
+  input('token').type = isVisible ? 'text' : 'password';
   button.setAttribute('aria-label', isVisible ? 'Hide token' : 'Show token');
   button.setAttribute('aria-pressed', String(isVisible));
   button.title = isVisible ? 'Hide token' : 'Show token';
@@ -95,15 +97,15 @@ function setTokenVisibility(isVisible) {
 }
 
 function getRunsLimit() {
-  const input = $('runs-limit');
-  const normalizedValue = normalizeRunsLimit(input.value);
+  const field = input('runs-limit');
+  const normalizedValue = normalizeRunsLimit(field.value);
 
-  input.value = normalizedValue;
+  field.value = String(normalizedValue);
   return normalizedValue;
 }
 
 function getPollIntervalMs() {
-  return normalizePollIntervalMs($('poll-interval').value);
+  return normalizePollIntervalMs(select('poll-interval').value);
 }
 
 function clearPollTimer() {
@@ -117,7 +119,7 @@ function shouldSchedulePoll() {
     hasLoadedResults &&
     !isLoading &&
     getToken() &&
-    isPollingEnabled($('poll-interval').value) &&
+    isPollingEnabled(select('poll-interval').value) &&
     !document.hidden
   );
 }
@@ -128,7 +130,7 @@ function scheduleNextPoll() {
 
   pollTimerId = setTimeout(() => {
     pollTimerId = null;
-    loadData(false, { showErrors: false });
+    void loadData(false, { showErrors: false });
   }, getPollIntervalMs());
 }
 
@@ -144,20 +146,20 @@ function renderPollIntervalOptions() {
   );
 }
 
-async function validateToken(token) {
-  const { login } = await api('/user', token);
+async function validateToken(token: string) {
+  const { login } = await api<{ login: string }>('/user', token);
   return login;
 }
 
-async function loadLiveRefs(fullName) {
+async function loadLiveRefs(fullName: string): Promise<LiveRefs | null> {
   try {
     const [branches, tags] = await Promise.all([
-      paginate(`/repos/${fullName}/branches`),
-      paginate(`/repos/${fullName}/tags`),
+      paginate<GitRef>(`/repos/${fullName}/branches`),
+      paginate<GitRef>(`/repos/${fullName}/tags`),
     ]);
 
-    const branchShasByName = new Map();
-    const tagShasByName = new Map();
+    const branchShasByName = new Map<string, Set<string>>();
+    const tagShasByName = new Map<string, Set<string>>();
 
     for (const branch of branches) {
       appendRef(branchShasByName, branch.name, branch.commit?.sha);
@@ -179,25 +181,25 @@ async function loadLiveRefs(fullName) {
 
 async function fetchAll() {
   const runsLimit = getRunsLimit();
-  const repos = await paginate('/user/repos?sort=full_name');
+  const repos = await paginate<Repository>('/user/repos?sort=full_name');
 
   const tasks = repos.map(repo => async () => {
     try {
-      const { workflows = [] } = await api(`/repos/${repo.full_name}/actions/workflows`);
+      const { workflows = [] } = await api<{ workflows?: Workflow[] }>(
+        `/repos/${repo.full_name}/actions/workflows`
+      );
       if (!workflows.length) return null;
 
-      const latestRuns = {};
+      const latestRuns: Record<string, WorkflowRun> = {};
       try {
-        const liveRefsCache = new Map();
-        const getLiveRefs = async fullName => {
-          if (!liveRefsCache.has(fullName)) {
-            liveRefsCache.set(fullName, loadLiveRefs(fullName));
-          }
-
-          return liveRefsCache.get(fullName);
+        const liveRefsCache = new Map<string, Promise<LiveRefs | null>>();
+        const getLiveRefs = (fullName: string) => {
+          const refs = liveRefsCache.get(fullName) ?? loadLiveRefs(fullName);
+          liveRefsCache.set(fullName, refs);
+          return refs;
         };
 
-        const workflowRuns = await paginate(
+        const workflowRuns = await paginate<WorkflowRun, { workflow_runs?: WorkflowRun[] }>(
           `/repos/${repo.full_name}/actions/runs`,
           data => data.workflow_runs ?? [],
           undefined,
@@ -205,12 +207,14 @@ async function fetchAll() {
         );
 
         for (const run of workflowRuns) {
-          const headRepoFullName = run.head_repository?.full_name || repo.full_name;
+          const headRepoName = run.head_repository?.full_name;
+          const headRepoFullName =
+            headRepoName === '' ? repo.full_name : (headRepoName ?? repo.full_name);
           const liveRefs = await getLiveRefs(headRepoFullName);
           if (liveRefs && !liveRefs.names.has(run.head_branch)) continue;
 
           const refType = resolveRunRefType(run, liveRefs);
-          const key = `${run.workflow_id}:${headRepoFullName}:${refType}:${run.head_branch}`;
+          const key = `${String(run.workflow_id)}:${headRepoFullName}:${refType}:${run.head_branch}`;
           const prev = latestRuns[key];
           if (!prev || run.created_at > prev.created_at) latestRuns[key] = run;
         }
@@ -224,7 +228,7 @@ async function fetchAll() {
     }
   });
 
-  return (await pool(tasks)).filter(Boolean);
+  return (await pool(tasks)).filter(result => result !== null);
 }
 
 async function loadData(force = false, { showErrors = true } = {}) {
@@ -245,9 +249,9 @@ async function loadData(force = false, { showErrors = true } = {}) {
   } catch (e) {
     console.error(e);
     if (showErrors) {
-      alert('Error: ' + e.message);
+      alert('Error: ' + (e instanceof Error ? e.message : String(e)));
     } else {
-      setTokenStatus(e.message, 'error');
+      setTokenStatus(e instanceof Error ? e.message : String(e), 'error');
     }
   } finally {
     setLoadingState(false);
@@ -257,8 +261,11 @@ async function loadData(force = false, { showErrors = true } = {}) {
 
 async function validateAndLoad() {
   if (isLoading) return;
-  const val = $('token').value.trim();
-  if (!val) return alert('Enter a GitHub token first.');
+  const val = input('token').value.trim();
+  if (!val) {
+    alert('Enter a GitHub token first.');
+    return;
+  }
   clearPollTimer();
   setLoadingState(true);
 
@@ -269,7 +276,7 @@ async function validateAndLoad() {
     setTokenStatus('Token was accepted by GitHub.');
     await loadData(true);
   } catch (e) {
-    setTokenStatus(e.message, 'error');
+    setTokenStatus(e instanceof Error ? e.message : String(e), 'error');
     setLoadingState(false);
   }
 }
@@ -280,7 +287,7 @@ function toggleAll() {
 
   repos.forEach(r => {
     r.classList.toggle('open', !allOpen);
-    r.querySelector('.repo-body').classList.toggle('hidden', allOpen);
+    r.querySelector('.repo-body')?.classList.toggle('hidden', allOpen);
   });
 
   setButtonLabel(
@@ -295,7 +302,7 @@ function handleClear() {
   localStorage.removeItem('github_token');
   setToken('');
   authenticatedUserLogin = null;
-  $('token').value = '';
+  input('token').value = '';
   setTokenVisibility(false);
   setTokenStatus();
   resetResultsView();
@@ -303,10 +310,12 @@ function handleClear() {
 
 renderPollIntervalOptions();
 
-$('btn-load').addEventListener('click', validateAndLoad);
+$('btn-load').addEventListener('click', () => {
+  void validateAndLoad();
+});
 $('btn-clear').addEventListener('click', handleClear);
 $('btn-toggle-token').addEventListener('click', () => {
-  setTokenVisibility($('token').type === 'password');
+  setTokenVisibility(input('token').type === 'password');
 });
 document.querySelectorAll('[data-help-trigger]').forEach(trigger => {
   trigger.addEventListener('click', e => {
@@ -319,19 +328,19 @@ $('toggle-all').addEventListener('click', toggleAll);
 
 document.addEventListener('visibilitychange', scheduleNextPoll);
 document.addEventListener('click', e => {
-  if (!e.target.closest('.help-container')) closeAllHelp();
+  if (!(e.target instanceof Element) || !e.target.closest('.help-container')) closeAllHelp();
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeAllHelp();
 });
 
 $('token').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !isLoading) validateAndLoad();
+  if (e.key === 'Enter' && !isLoading) void validateAndLoad();
 });
 
-const savedToken = localStorage.getItem('github_token') || '';
+const savedToken = localStorage.getItem('github_token') ?? '';
 if (savedToken) {
   setToken(savedToken);
-  $('token').value = savedToken;
+  input('token').value = savedToken;
   setTokenStatus('Token is loaded from storage.');
 }

@@ -1,8 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
-import { appendRef, resolveRunRefType } from './refs.js';
+import { appendRef, resolveRunRefType } from './refs';
 
-function liveRefs({ branches = {}, tags = {} } = {}) {
+function liveRefs({
+  branches = {},
+  tags = {},
+}: { branches?: Record<string, string[]>; tags?: Record<string, string[]> } = {}) {
   const branchShasByName = new Map(
     Object.entries(branches).map(([name, shas]) => [name, new Set(shas)])
   );
@@ -16,7 +19,7 @@ function liveRefs({ branches = {}, tags = {} } = {}) {
 
 describe('appendRef', () => {
   test('stores multiple SHAs per ref name and ignores incomplete refs', () => {
-    const refs = new Map();
+    const refs = new Map<string, Set<string>>();
 
     appendRef(refs, 'main', 'sha-1');
     appendRef(refs, 'main', 'sha-2');
