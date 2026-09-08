@@ -36,6 +36,12 @@ body {
   line-height: 1.5;
 }
 
+/* Font Awesome recommends whole 16px sizes to reduce webfont animation wobble. */
+.fa-spin {
+  display: block;
+  font-size: 16px;
+}
+
 .container {
   max-width: 960px;
   margin: 0 auto;
