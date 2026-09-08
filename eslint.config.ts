@@ -7,7 +7,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  globalIgnores(['**/build/**', '**/dist/**']),
+  globalIgnores(['**/dist/**']),
   {
     linterOptions: {
       reportUnusedDisableDirectives: 'error',

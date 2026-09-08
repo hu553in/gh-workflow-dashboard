@@ -1,3 +1,4 @@
+import '@fortawesome/fontawesome-free/css/all.css';
 import './style.css';
 
 import { api, getToken, paginate, pool, setToken } from './api';
