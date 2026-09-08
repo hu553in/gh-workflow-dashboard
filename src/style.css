@@ -36,12 +36,6 @@ body {
   line-height: 1.5;
 }
 
-/* Font Awesome recommends whole 16px sizes to reduce webfont animation wobble. */
-.fa-spin {
-  display: block;
-  font-size: 16px;
-}
-
 .container {
   max-width: 960px;
   margin: 0 auto;
@@ -70,7 +64,7 @@ header h1 {
   gap: 0.6rem;
 }
 
-header h1 i {
+header h1 svg {
   color: var(--text-dim);
 }
 
@@ -209,7 +203,6 @@ header p {
 }
 
 .token-visibility-toggle:hover {
-  background: rgb(255 255 255 / 6%);
   color: var(--text);
 }
 
@@ -333,7 +326,6 @@ header p {
 .help-trigger:hover,
 .help-trigger:focus-visible,
 .help-trigger[aria-expanded='true'] {
-  background: rgb(255 255 255 / 6%);
   color: var(--text);
 }
 
@@ -346,7 +338,7 @@ header p {
   width: 1.15rem;
   height: 1.15rem;
   border-radius: 4px;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 .status-trigger.status-success {
@@ -660,7 +652,7 @@ header p {
   white-space: nowrap;
 }
 
-.badge i {
+.badge svg {
   flex-shrink: 0;
 }
 
@@ -722,7 +714,7 @@ header p {
   text-align: center;
 }
 
-#empty i {
+#empty svg {
   font-size: 3rem;
   margin-bottom: 1rem;
   opacity: 0.4;

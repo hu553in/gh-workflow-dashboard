@@ -265,7 +265,7 @@ function renderRunRow(run: WorkflowRun | null) {
 
   const source = document.createElement('span');
   source.className = 'wf-source';
-  source.textContent = run ? `${run.event} - ${run.head_branch}` : '-';
+  source.textContent = run ? `${run.event} • ${run.head_branch}` : '-';
 
   const right = document.createElement('div');
   right.className = 'run-right';
@@ -421,7 +421,7 @@ export function renderResults(results: RepoResult[], authenticatedUserLogin: str
   const wfCount = document.createElement('strong');
   wfCount.textContent = String(totalWf);
 
-  stats.append(repoCount, ' repositories - ', wfCount, ' workflows');
+  stats.append(repoCount, ' repositories • ', wfCount, ' workflows');
 
   $('repos').replaceChildren(
     ...sortedResults.map(r => renderRepo(r.repo, r.workflows, r.latestRuns))
