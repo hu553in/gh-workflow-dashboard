@@ -1,4 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>hu553in/common-things//presets/renovate/bun"]
+  "extends": ["github>hu553in/common-things//presets/renovate/bun"],
+  "packageRules": [
+    {
+      "description": "Disable automatic TypeScript major updates",
+      "matchManagers": ["bun"],
+      "matchPackageNames": ["typescript"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
 }
