@@ -8,8 +8,7 @@ entirely in the browser.
 
 ## What it does
 
-- Fetches all repositories and workflows available to the authenticated user through the GitHub REST
-  API
+- Fetches repositories and workflows available to the authenticated user through the GitHub REST API
 - Displays the latest run for each workflow, grouped by repository
 - Resolves run refs to active branches or tags by comparing SHAs
 - Shows each run's status, event type, branch, timestamp, and a link to GitHub
