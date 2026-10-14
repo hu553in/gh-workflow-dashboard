@@ -16,7 +16,6 @@ entirely in the browser.
 - Provides summary statistics, including total repositories, workflows, and workflow counts by run
   state
 - Supports optional auto-reload intervals with ETag-based conditional GitHub API requests
-- Stores the token in browser `localStorage` and sends it only to the GitHub API
 
 ## Requirements
 
@@ -32,7 +31,7 @@ Required token scopes:
 ## Setup
 
 ```bash
-bun i
+bun ci
 bun dev
 ```
 
@@ -55,11 +54,11 @@ The token stays in `localStorage` and is used only for requests to `https://api.
 ## Development
 
 ```bash
-bun run test    # Tests
 bun check:types # TypeScript checks
+bun run build   # Production build (Vite -> dist/)
+bun run test    # Tests
 bun check       # Full local gate
 bun check:fix   # Full local gate with automatic fixes
-bun run build   # Production build (Vite -> dist/)
 ```
 
 ## Tech stack
