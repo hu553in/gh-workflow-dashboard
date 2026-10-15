@@ -3,7 +3,7 @@
   "buildCommand": "bun run build",
   "git": {
     "deploymentEnabled": {
-      "*": false,
+      "**": false,
       "main": true
     }
   },
