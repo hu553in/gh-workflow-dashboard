@@ -1,0 +1,8 @@
+[test]
+# Coverage thresholds apply to each file. dom.ts only wraps browser DOM lookups.
+coveragePathIgnorePatterns = ["src/dom.ts"]
+coverageThreshold = { lines = 0.46, functions = 0.33 }
+
+[install]
+# Matches the Renovate minimumReleaseAge (3 days), so lockfile maintenance waits too.
+minimumReleaseAge = 259200

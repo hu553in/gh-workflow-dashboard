@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from "bun:test";
 
 import {
   compareRepos,
@@ -6,200 +6,245 @@ import {
   groupRunsByWorkflow,
   repoSortRank,
   runView,
-} from './render';
-import type { Repository } from './types';
+} from "./render";
+import type { Repository } from "./types";
 
-describe('repoSortRank', () => {
-  test('sorts public repos before private repos and forks', () => {
-    expect(repoSortRank({ private: false, fork: false })).toBe(0);
-    expect(repoSortRank({ private: true, fork: false })).toBe(1);
-    expect(repoSortRank({ private: false, fork: true })).toBe(2);
-    expect(repoSortRank({ private: true, fork: true })).toBe(2);
+const repo = (
+  fullName: string,
+  options: Partial<Repository> = {}
+): Repository => ({
+  fork: false,
+  full_name: fullName,
+  html_url: `https://github.com/${fullName}`,
+  owner: {
+    avatar_url: "https://github.com/owner.png",
+    login: fullName.split("/")[0] ?? "",
+  },
+  private: false,
+  ...options,
+});
+
+describe("repoSortRank", () => {
+  test("sorts public repos before private repos and forks", () => {
+    expect(repoSortRank({ fork: false, private: false })).toBe(0);
+    expect(repoSortRank({ fork: false, private: true })).toBe(1);
+    expect(repoSortRank({ fork: true, private: false })).toBe(2);
+    expect(repoSortRank({ fork: true, private: true })).toBe(2);
   });
 });
 
-describe('compareRepos', () => {
-  const repo = (fullName: string, options: Partial<Repository> = {}): Repository => ({
-    full_name: fullName,
-    html_url: `https://github.com/${fullName}`,
-    owner: { login: fullName.split('/')[0] ?? '', avatar_url: 'https://github.com/owner.png' },
-    private: false,
-    fork: false,
-    ...options,
-  });
-
-  test('puts contributor repos after owned repos', () => {
+describe("compareRepos", () => {
+  test("puts contributor repos after owned repos", () => {
     const repos = [
-      repo('contributor/public'),
-      repo('owner/fork', { fork: true }),
-      repo('owner/private', { private: true }),
-      repo('owner/public'),
+      repo("contributor/public"),
+      repo("owner/fork", { fork: true }),
+      repo("owner/private", { private: true }),
+      repo("owner/public"),
     ];
 
-    expect(repos.sort((a, b) => compareRepos(a, b, 'owner')).map(item => item.full_name)).toEqual([
-      'owner/public',
-      'owner/private',
-      'owner/fork',
-      'contributor/public',
+    expect(
+      repos
+        .toSorted((a, b) => compareRepos(a, b, "owner"))
+        .map((item) => item.full_name)
+    ).toEqual([
+      "owner/public",
+      "owner/private",
+      "owner/fork",
+      "contributor/public",
     ]);
   });
 
-  test('keeps public, private, fork, owner, and name sorting inside contributor repos', () => {
+  test("keeps public, private, fork, owner, and name sorting inside contributor repos", () => {
     const repos = [
-      repo('zeta/fork', { fork: true }),
-      repo('beta/private', { private: true }),
-      repo('zeta/public'),
-      repo('alpha/z-last'),
-      repo('alpha/a-first'),
+      repo("zeta/fork", { fork: true }),
+      repo("beta/private", { private: true }),
+      repo("zeta/public"),
+      repo("alpha/z-last"),
+      repo("alpha/a-first"),
     ];
 
-    expect(repos.sort((a, b) => compareRepos(a, b, 'owner')).map(item => item.full_name)).toEqual([
-      'alpha/a-first',
-      'alpha/z-last',
-      'zeta/public',
-      'beta/private',
-      'zeta/fork',
+    expect(
+      repos
+        .toSorted((a, b) => compareRepos(a, b, "owner"))
+        .map((item) => item.full_name)
+    ).toEqual([
+      "alpha/a-first",
+      "alpha/z-last",
+      "zeta/public",
+      "beta/private",
+      "zeta/fork",
     ]);
   });
 });
 
-describe('runView', () => {
-  test('maps current GitHub workflow statuses explicitly', () => {
-    expect(runView(null)).toMatchObject({ mod: 'neutral', label: 'no runs', countKey: 'other' });
-    expect(runView({ status: 'queued', conclusion: null })).toMatchObject({
-      mod: 'queued',
-      label: 'queued',
-      countKey: 'queued',
+describe("runView", () => {
+  test("maps current GitHub workflow statuses explicitly", () => {
+    expect(runView(null)).toMatchObject({
+      countKey: "other",
+      label: "no runs",
+      mod: "neutral",
     });
-    expect(runView({ status: 'requested', conclusion: null })).toMatchObject({
-      mod: 'queued',
-      label: 'requested',
-      countKey: 'queued',
+    expect(runView({ conclusion: null, status: "queued" })).toMatchObject({
+      countKey: "queued",
+      label: "queued",
+      mod: "queued",
     });
-    expect(runView({ status: 'waiting', conclusion: null })).toMatchObject({
-      mod: 'queued',
-      label: 'waiting',
-      countKey: 'queued',
+    expect(runView({ conclusion: null, status: "requested" })).toMatchObject({
+      countKey: "queued",
+      label: "requested",
+      mod: "queued",
     });
-    expect(runView({ status: 'pending', conclusion: null })).toMatchObject({
-      mod: 'queued',
-      label: 'pending',
-      countKey: 'queued',
+    expect(runView({ conclusion: null, status: "waiting" })).toMatchObject({
+      countKey: "queued",
+      label: "waiting",
+      mod: "queued",
     });
-    expect(runView({ status: 'in_progress', conclusion: null })).toMatchObject({
-      mod: 'running',
-      label: 'running',
-      countKey: 'running',
+    expect(runView({ conclusion: null, status: "pending" })).toMatchObject({
+      countKey: "queued",
+      label: "pending",
+      mod: "queued",
     });
-    expect(runView({ status: 'completed', conclusion: null })).toMatchObject({
-      mod: 'neutral',
-      label: 'completed',
-      countKey: 'other',
+    expect(runView({ conclusion: null, status: "in_progress" })).toMatchObject({
+      countKey: "running",
+      label: "running",
+      mod: "running",
     });
-  });
-
-  test('maps current GitHub workflow conclusions explicitly', () => {
-    expect(runView({ status: 'completed', conclusion: 'success' })).toMatchObject({
-      mod: 'success',
-      label: 'success',
-      countKey: 'pass',
-    });
-    expect(runView({ status: 'completed', conclusion: 'failure' })).toMatchObject({
-      mod: 'failure',
-      label: 'failure',
-      countKey: 'fail',
-    });
-    expect(runView({ status: 'completed', conclusion: 'action_required' })).toMatchObject({
-      mod: 'failure',
-      label: 'action_required',
-      countKey: 'fail',
-    });
-    expect(runView({ status: 'completed', conclusion: 'timed_out' })).toMatchObject({
-      mod: 'failure',
-      label: 'timed_out',
-      countKey: 'fail',
-    });
-    expect(runView({ status: 'completed', conclusion: 'cancelled' })).toMatchObject({
-      mod: 'neutral',
-      label: 'cancelled',
-      countKey: 'other',
-    });
-    expect(runView({ status: 'completed', conclusion: 'neutral' })).toMatchObject({
-      mod: 'neutral',
-      label: 'neutral',
-      countKey: 'other',
-    });
-    expect(runView({ status: 'completed', conclusion: 'skipped' })).toMatchObject({
-      mod: 'neutral',
-      label: 'skipped',
-      countKey: 'other',
-    });
-    expect(runView({ status: 'completed', conclusion: 'stale' })).toMatchObject({
-      mod: 'neutral',
-      label: 'stale',
-      countKey: 'other',
+    expect(runView({ conclusion: null, status: "completed" })).toMatchObject({
+      countKey: "other",
+      label: "completed",
+      mod: "neutral",
     });
   });
 
-  test('keeps unknown API values visible as neutral fallbacks', () => {
-    expect(runView({ status: 'new_status', conclusion: null })).toMatchObject({
-      mod: 'neutral',
-      label: 'new_status',
-      countKey: 'other',
+  test("maps current GitHub workflow conclusions explicitly", () => {
+    expect(
+      runView({ conclusion: "success", status: "completed" })
+    ).toMatchObject({
+      countKey: "pass",
+      label: "success",
+      mod: "success",
     });
-    expect(runView({ status: 'completed', conclusion: 'new_conclusion' })).toMatchObject({
-      mod: 'neutral',
-      label: 'new_conclusion',
-      countKey: 'other',
+    expect(
+      runView({ conclusion: "failure", status: "completed" })
+    ).toMatchObject({
+      countKey: "fail",
+      label: "failure",
+      mod: "failure",
+    });
+    expect(
+      runView({ conclusion: "action_required", status: "completed" })
+    ).toMatchObject({
+      countKey: "fail",
+      label: "action_required",
+      mod: "failure",
+    });
+    expect(
+      runView({ conclusion: "timed_out", status: "completed" })
+    ).toMatchObject({
+      countKey: "fail",
+      label: "timed_out",
+      mod: "failure",
+    });
+    expect(
+      runView({ conclusion: "cancelled", status: "completed" })
+    ).toMatchObject({
+      countKey: "other",
+      label: "cancelled",
+      mod: "neutral",
+    });
+    expect(
+      runView({ conclusion: "neutral", status: "completed" })
+    ).toMatchObject({
+      countKey: "other",
+      label: "neutral",
+      mod: "neutral",
+    });
+    expect(
+      runView({ conclusion: "skipped", status: "completed" })
+    ).toMatchObject({
+      countKey: "other",
+      label: "skipped",
+      mod: "neutral",
+    });
+    expect(runView({ conclusion: "stale", status: "completed" })).toMatchObject(
+      {
+        countKey: "other",
+        label: "stale",
+        mod: "neutral",
+      }
+    );
+  });
+
+  test("keeps unknown API values visible as neutral fallbacks", () => {
+    expect(runView({ conclusion: null, status: "new_status" })).toMatchObject({
+      countKey: "other",
+      label: "new_status",
+      mod: "neutral",
+    });
+    expect(
+      runView({ conclusion: "new_conclusion", status: "completed" })
+    ).toMatchObject({
+      countKey: "other",
+      label: "new_conclusion",
+      mod: "neutral",
     });
   });
 });
 
-describe('groupRunsByWorkflow', () => {
-  test('groups by workflow id and sorts newest runs first', () => {
+describe("groupRunsByWorkflow", () => {
+  test("groups by workflow id and sorts newest runs first", () => {
     const grouped = groupRunsByWorkflow({
-      a: { workflow_id: 1, created_at: '2026-05-14T00:00:00Z' },
-      b: { workflow_id: 1, created_at: '2026-05-14T00:01:00Z' },
-      c: { workflow_id: 2, created_at: '2026-05-14T00:02:00Z' },
+      a: { created_at: "2026-05-14T00:00:00Z", workflow_id: 1 },
+      b: { created_at: "2026-05-14T00:01:00Z", workflow_id: 1 },
+      c: { created_at: "2026-05-14T00:02:00Z", workflow_id: 2 },
     });
 
-    expect(grouped.get(1)?.map(run => run.created_at)).toEqual([
-      '2026-05-14T00:01:00Z',
-      '2026-05-14T00:00:00Z',
+    expect(grouped.get(1)?.map((run) => run.created_at)).toEqual([
+      "2026-05-14T00:01:00Z",
+      "2026-05-14T00:00:00Z",
     ]);
-    expect(grouped.get(2)).toEqual([{ workflow_id: 2, created_at: '2026-05-14T00:02:00Z' }]);
+    expect(grouped.get(2)).toEqual([
+      { created_at: "2026-05-14T00:02:00Z", workflow_id: 2 },
+    ]);
   });
 });
 
-describe('countWorkflowRuns', () => {
-  test('counts pass, fail, running, queued, and other buckets consistently with runView', () => {
-    const workflows = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }];
+describe("countWorkflowRuns", () => {
+  test("counts pass, fail, running, queued, and other buckets consistently with runView", () => {
+    const workflows = [
+      { id: 1 },
+      { id: 2 },
+      { id: 3 },
+      { id: 4 },
+      { id: 5 },
+      { id: 6 },
+    ];
     const runsByWorkflow = new Map([
-      [1, [{ status: 'completed', conclusion: 'success' }]],
+      [1, [{ conclusion: "success", status: "completed" }]],
       [
         2,
         [
-          { status: 'completed', conclusion: 'failure' },
-          { status: 'completed', conclusion: 'timed_out' },
+          { conclusion: "failure", status: "completed" },
+          { conclusion: "timed_out", status: "completed" },
         ],
       ],
-      [3, [{ status: 'in_progress', conclusion: null }]],
+      [3, [{ conclusion: null, status: "in_progress" }]],
       [
         4,
         [
-          { status: 'queued', conclusion: null },
-          { status: 'waiting', conclusion: null },
+          { conclusion: null, status: "queued" },
+          { conclusion: null, status: "waiting" },
         ],
       ],
-      [5, [{ status: 'completed', conclusion: 'skipped' }]],
+      [5, [{ conclusion: "skipped", status: "completed" }]],
     ]);
 
     expect(countWorkflowRuns(workflows, runsByWorkflow)).toEqual({
-      pass: 1,
       fail: 2,
-      running: 1,
-      queued: 2,
       other: 2,
+      pass: 1,
+      queued: 2,
+      running: 1,
     });
   });
 });

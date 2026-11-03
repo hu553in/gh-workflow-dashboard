@@ -24,7 +24,7 @@
     "exactOptionalPropertyTypes": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "types": ["vite/client", "node"],
+    "types": ["vite/client", "bun"],
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "Bundler",
@@ -36,6 +36,6 @@
     "verbatimModuleSyntax": true,
     "allowJs": false
   },
-  "include": ["src", "eslint.config.ts", "vite.config.ts"],
+  "include": ["src", "*.config.ts"],
   "exclude": ["node_modules"]
 }

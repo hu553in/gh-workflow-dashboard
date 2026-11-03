@@ -54,10 +54,9 @@ The token stays in `localStorage` and is used only for requests to `https://api.
 ## Development
 
 ```bash
-bun check:types # TypeScript checks
 bun run build   # Production build (Vite -> dist/)
 bun run test    # Tests
-bun check       # Full local gate
+bun check:all   # Full local gate
 bun check:fix   # Full local gate with automatic fixes
 ```
 
@@ -66,4 +65,4 @@ bun check:fix   # Full local gate with automatic fixes
 - Vanilla TypeScript
 - Vite
 - GitHub REST API `v2022-11-28`
-- Vitest, ESLint, Prettier, Stylelint, Knip
+- Bun test, Ultracite (Oxlint + Oxfmt), Stylelint, Knip

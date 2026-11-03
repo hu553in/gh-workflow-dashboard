@@ -1,20 +1,7 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vite";
 
 export default defineConfig({
   build: {
-    target: 'esnext',
-  },
-  test: {
-    coverage: {
-      provider: 'v8',
-      include: ['src/**/*.ts'],
-      reporter: ['text', 'json-summary'],
-      thresholds: {
-        statements: 24,
-        branches: 38,
-        functions: 24,
-        lines: 23,
-      },
-    },
+    target: "esnext",
   },
 });

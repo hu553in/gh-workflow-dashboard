@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap");
 
 :root {
   --bg: #0e1117;
@@ -29,7 +29,7 @@
 }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -101,7 +101,7 @@ header p {
   background: var(--surface);
   color: var(--text-dim);
   font:
-    500 0.8rem 'DM Sans',
+    500 0.8rem "DM Sans",
     sans-serif;
   cursor: pointer;
   transition: 0.15s;
@@ -176,7 +176,7 @@ header p {
   background: var(--surface);
   color: var(--text);
   font:
-    0.85rem 'JetBrains Mono',
+    0.85rem "JetBrains Mono",
     monospace;
   outline: none;
   transition: border-color 0.15s;
@@ -228,7 +228,7 @@ header p {
   background: var(--surface);
   color: var(--text);
   font:
-    0.8rem 'JetBrains Mono',
+    0.8rem "JetBrains Mono",
     monospace;
   color-scheme: dark;
   outline: none;
@@ -325,7 +325,7 @@ header p {
 
 .help-trigger:hover,
 .help-trigger:focus-visible,
-.help-trigger[aria-expanded='true'] {
+.help-trigger[aria-expanded="true"] {
   color: var(--text);
 }
 
@@ -351,13 +351,13 @@ header p {
 
 .status-trigger.status-success:hover,
 .status-trigger.status-success:focus-visible,
-.status-trigger.status-success[aria-expanded='true'] {
+.status-trigger.status-success[aria-expanded="true"] {
   color: var(--green);
 }
 
 .status-trigger.status-error:hover,
 .status-trigger.status-error:focus-visible,
-.status-trigger.status-error[aria-expanded='true'] {
+.status-trigger.status-error[aria-expanded="true"] {
   color: var(--red);
 }
 
@@ -426,7 +426,7 @@ header p {
 }
 
 .help-container:hover .help-popover,
-.help-trigger[aria-expanded='true'] + .help-popover {
+.help-trigger[aria-expanded="true"] + .help-popover {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
@@ -456,7 +456,7 @@ header p {
   border-radius: 6px;
   background: var(--surface);
   color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.9em;
   line-height: 1;
   white-space: nowrap;
@@ -590,7 +590,7 @@ header p {
   gap: 0.6rem;
   margin-top: 0.15rem;
   font-size: 0.7rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   color: var(--text-dim);
 }
 
@@ -623,7 +623,7 @@ header p {
 
 .wf-source {
   font:
-    500 0.7rem 'JetBrains Mono',
+    500 0.7rem "JetBrains Mono",
     monospace;
   color: var(--text-dim);
   background: rgb(255 255 255 / 6%);
@@ -643,7 +643,7 @@ header p {
   max-width: 100%;
   overflow: hidden;
   font:
-    600 0.65rem 'DM Sans',
+    600 0.65rem "DM Sans",
     sans-serif;
   padding: 0.2rem 0.55rem;
   border-radius: 6px;

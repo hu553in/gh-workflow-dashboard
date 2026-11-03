@@ -1,7 +1,9 @@
-const GITHUB_API_BASE_URL = 'https://api.github.com';
+const GITHUB_API_BASE_URL = "https://api.github.com";
 
 function getErrorMessage(status: number) {
-  return status === 403 ? 'Rate limit or insufficient permissions' : `API ${String(status)}`;
+  return status === 403
+    ? "Rate limit or insufficient permissions"
+    : `API ${String(status)}`;
 }
 
 function makeCacheKey(url: string, authToken: string) {
@@ -15,20 +17,24 @@ interface CacheEntry {
 
 function makeHeaders(authToken: string, cacheEntry: CacheEntry | undefined) {
   const headers: Record<string, string> = {
+    Accept: "application/vnd.github+json",
     Authorization: `Bearer ${authToken}`,
-    Accept: 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28',
+    "X-GitHub-Api-Version": "2022-11-28",
   };
 
-  if (cacheEntry?.etag) headers['If-None-Match'] = cacheEntry.etag;
+  if (cacheEntry?.etag) {
+    headers["If-None-Match"] = cacheEntry.etag;
+  }
   return headers;
 }
+
+export type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
 
 export function createApiClient({
   baseUrl = GITHUB_API_BASE_URL,
   fetchImpl = globalThis.fetch,
-}: { baseUrl?: string; fetchImpl?: typeof fetch } = {}) {
-  let token = '';
+}: { baseUrl?: string; fetchImpl?: FetchLike } = {}) {
+  let token = "";
   const cache = new Map<string, CacheEntry>();
 
   function clearCache() {
@@ -40,7 +46,9 @@ export function createApiClient({
   }
 
   function setToken(nextToken: string) {
-    if (nextToken !== token) clearCache();
+    if (nextToken !== token) {
+      clearCache();
+    }
     token = nextToken;
   }
 
@@ -53,7 +61,9 @@ export function createApiClient({
     });
 
     if (res.status === 304) {
-      if (!cacheEntry) throw new Error('API 304 without cached response');
+      if (!cacheEntry) {
+        throw new Error("API 304 without cached response");
+      }
       return cacheEntry.data;
     }
 
@@ -62,10 +72,10 @@ export function createApiClient({
     }
 
     const data: unknown = await res.json();
-    const etag = res.headers.get('ETag');
+    const etag = res.headers.get("ETag");
 
     if (etag) {
-      cache.set(cacheKey, { etag, data });
+      cache.set(cacheKey, { data, etag });
     } else {
       cache.delete(cacheKey);
     }
@@ -87,15 +97,19 @@ export function createApiClient({
     const all: T[] = [];
     let page = 1;
     for (;;) {
-      const sep = path.includes('?') ? '&' : '?';
+      const sep = path.includes("?") ? "&" : "?";
       const pagePath = `${path}${sep}per_page=100&page=${String(page)}`;
+      /* oxlint-disable no-await-in-loop -- Each page decides whether another page is needed. */
       const pageItems = select
         ? select(await api<TResponse>(pagePath, authToken))
         : await api<T[]>(pagePath, authToken);
+      /* oxlint-enable no-await-in-loop */
       const remaining = limit - all.length;
       all.push(...pageItems.slice(0, remaining));
-      if (all.length >= limit || pageItems.length < 100) return all;
-      page++;
+      if (all.length >= limit || pageItems.length < 100) {
+        return all;
+      }
+      page += 1;
     }
   }
 
@@ -108,18 +122,7 @@ export function createApiClient({
   };
 }
 
-const defaultClient = createApiClient();
-
-export function getToken() {
-  return defaultClient.getToken();
-}
-
-export function setToken(t: string) {
-  defaultClient.setToken(t);
-}
-
-export const api = defaultClient.api;
-export const paginate = defaultClient.paginate;
+export const { api, getToken, paginate, setToken } = createApiClient();
 
 export async function pool<T>(tasks: (() => Promise<T>)[], concurrency = 8) {
   const results: Promise<T>[] = [];
@@ -130,7 +133,10 @@ export async function pool<T>(tasks: (() => Promise<T>)[], concurrency = 8) {
     });
     active.push(p);
     results.push(p);
-    if (active.length >= concurrency) await Promise.race(active);
+    if (active.length >= concurrency) {
+      // oxlint-disable-next-line no-await-in-loop -- Waiting here caps the number of tasks in flight.
+      await Promise.race(active);
+    }
   }
   return Promise.all(results);
 }

@@ -1,168 +1,210 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from "bun:test";
 
-import { createApiClient, pool } from './api';
+import { createApiClient, pool } from "./api";
+import type { FetchLike } from "./api";
 
 function jsonResponse(
   body: unknown,
-  { status = 200, headers = {} }: { status?: number; headers?: Record<string, string> } = {}
+  {
+    status = 200,
+    headers = {},
+  }: { status?: number; headers?: Record<string, string> } = {}
 ) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
-  });
+  return Response.json(body, { headers, status });
 }
 
-describe('createApiClient', () => {
-  test('paginates array responses without a selector and stops on a short page', async () => {
+describe("createApiClient", () => {
+  test("paginates array responses without a selector and stops on a short page", async () => {
     const firstPage = Array.from({ length: 100 }, (_, id) => ({ id }));
     const lastPage = [{ id: 100 }];
     const fetchImpl = vi
-      .fn<typeof fetch>()
+      .fn<FetchLike>()
       .mockResolvedValueOnce(jsonResponse(firstPage))
       .mockResolvedValueOnce(jsonResponse(lastPage));
-    const client = createApiClient({ baseUrl: 'https://api.example.test', fetchImpl });
+    const client = createApiClient({
+      baseUrl: "https://api.example.test",
+      fetchImpl,
+    });
 
-    await expect(client.paginate<{ id: number }>('/repos')).resolves.toEqual([
+    await expect(client.paginate<{ id: number }>("/repos")).resolves.toEqual([
       ...firstPage,
       ...lastPage,
     ]);
     expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
-      'https://api.example.test/repos?per_page=100&page=1',
-      'https://api.example.test/repos?per_page=100&page=2',
+      "https://api.example.test/repos?per_page=100&page=1",
+      "https://api.example.test/repos?per_page=100&page=2",
     ]);
   });
 
-  test('sends GitHub headers and caches ETag responses per URL and token', async () => {
+  test("sends GitHub headers and caches ETag responses per URL and token", async () => {
     const fetchImpl = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(jsonResponse({ value: 1 }, { headers: { ETag: '"repo-v1"' } }))
+      .fn<FetchLike>()
+      .mockResolvedValueOnce(
+        jsonResponse({ value: 1 }, { headers: { ETag: '"repo-v1"' } })
+      )
       .mockResolvedValueOnce(new Response(null, { status: 304 }));
-    const client = createApiClient({ baseUrl: 'https://api.example.test', fetchImpl });
-
-    client.setToken('token-a');
-
-    await expect(client.api('/repos')).resolves.toEqual({ value: 1 });
-    await expect(client.api('/repos')).resolves.toEqual({ value: 1 });
-
-    expect(fetchImpl).toHaveBeenNthCalledWith(1, 'https://api.example.test/repos', {
-      headers: {
-        Authorization: 'Bearer token-a',
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
+    const client = createApiClient({
+      baseUrl: "https://api.example.test",
+      fetchImpl,
     });
-    expect(fetchImpl).toHaveBeenNthCalledWith(2, 'https://api.example.test/repos', {
-      headers: {
-        Authorization: 'Bearer token-a',
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        'If-None-Match': '"repo-v1"',
-      },
-    });
+
+    client.setToken("token-a");
+
+    await expect(client.api("/repos")).resolves.toEqual({ value: 1 });
+    await expect(client.api("/repos")).resolves.toEqual({ value: 1 });
+
+    expect(fetchImpl).toHaveBeenNthCalledWith(
+      1,
+      "https://api.example.test/repos",
+      {
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: "Bearer token-a",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      }
+    );
+    expect(fetchImpl).toHaveBeenNthCalledWith(
+      2,
+      "https://api.example.test/repos",
+      {
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: "Bearer token-a",
+          "If-None-Match": '"repo-v1"',
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      }
+    );
   });
 
-  test('does not reuse cached data after token changes', async () => {
+  test("does not reuse cached data after token changes", async () => {
     const fetchImpl = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(jsonResponse({ value: 'a' }, { headers: { ETag: '"v1"' } }))
-      .mockResolvedValueOnce(jsonResponse({ value: 'b' }, { headers: { ETag: '"v2"' } }));
-    const client = createApiClient({ baseUrl: 'https://api.example.test', fetchImpl });
+      .fn<FetchLike>()
+      .mockResolvedValueOnce(
+        jsonResponse({ value: "a" }, { headers: { ETag: '"v1"' } })
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({ value: "b" }, { headers: { ETag: '"v2"' } })
+      );
+    const client = createApiClient({
+      baseUrl: "https://api.example.test",
+      fetchImpl,
+    });
 
-    client.setToken('token-a');
-    await expect(client.api('/user')).resolves.toEqual({ value: 'a' });
+    client.setToken("token-a");
+    await expect(client.api("/user")).resolves.toEqual({ value: "a" });
 
-    client.setToken('token-b');
-    await expect(client.api('/user')).resolves.toEqual({ value: 'b' });
+    client.setToken("token-b");
+    await expect(client.api("/user")).resolves.toEqual({ value: "b" });
 
     const headers = fetchImpl.mock.calls[1]?.[1]?.headers;
     expect(headers).toBeDefined();
-    expect(headers).not.toHaveProperty('If-None-Match');
+    expect(headers).not.toHaveProperty("If-None-Match");
   });
 
-  test('drops cached validators when a fresh response has no ETag', async () => {
+  test("drops cached validators when a fresh response has no ETag", async () => {
     const fetchImpl = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(jsonResponse({ value: 1 }, { headers: { ETag: '"v1"' } }))
+      .fn<FetchLike>()
+      .mockResolvedValueOnce(
+        jsonResponse({ value: 1 }, { headers: { ETag: '"v1"' } })
+      )
       .mockResolvedValueOnce(jsonResponse({ value: 2 }))
       .mockResolvedValueOnce(jsonResponse({ value: 3 }));
-    const client = createApiClient({ baseUrl: 'https://api.example.test', fetchImpl });
+    const client = createApiClient({
+      baseUrl: "https://api.example.test",
+      fetchImpl,
+    });
 
-    await client.api('/resource');
-    await client.api('/resource');
-    await client.api('/resource');
+    await client.api("/resource");
+    await client.api("/resource");
+    await client.api("/resource");
 
-    expect(fetchImpl.mock.calls[1]?.[1]?.headers).toHaveProperty('If-None-Match', '"v1"');
+    expect(fetchImpl.mock.calls[1]?.[1]?.headers).toHaveProperty(
+      "If-None-Match",
+      '"v1"'
+    );
     const headers = fetchImpl.mock.calls[2]?.[1]?.headers;
     expect(headers).toBeDefined();
-    expect(headers).not.toHaveProperty('If-None-Match');
+    expect(headers).not.toHaveProperty("If-None-Match");
   });
 
-  test('formats API errors consistently', async () => {
+  test("formats API errors consistently", async () => {
     const client403 = createApiClient({
-      baseUrl: 'https://api.example.test',
-      fetchImpl: vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({}, { status: 403 })),
+      baseUrl: "https://api.example.test",
+      fetchImpl: vi
+        .fn<FetchLike>()
+        .mockResolvedValue(jsonResponse({}, { status: 403 })),
     });
     const client500 = createApiClient({
-      baseUrl: 'https://api.example.test',
-      fetchImpl: vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({}, { status: 500 })),
+      baseUrl: "https://api.example.test",
+      fetchImpl: vi
+        .fn<FetchLike>()
+        .mockResolvedValue(jsonResponse({}, { status: 500 })),
     });
 
-    await expect(client403.api('/blocked')).rejects.toThrow(
-      'Rate limit or insufficient permissions'
+    await expect(client403.api("/blocked")).rejects.toThrow(
+      "Rate limit or insufficient permissions"
     );
-    await expect(client500.api('/broken')).rejects.toThrow('API 500');
+    await expect(client500.api("/broken")).rejects.toThrow("API 500");
   });
 
-  test('paginates selected data and respects limits across pages', async () => {
+  test("paginates selected data and respects limits across pages", async () => {
     const firstPage = Array.from({ length: 100 }, (_, index) => index + 1);
     const secondPage = Array.from({ length: 100 }, (_, index) => index + 101);
     const fetchImpl = vi
-      .fn<typeof fetch>()
+      .fn<FetchLike>()
       .mockResolvedValueOnce(jsonResponse({ items: firstPage }))
       .mockResolvedValueOnce(jsonResponse({ items: secondPage }));
-    const client = createApiClient({ baseUrl: 'https://api.example.test', fetchImpl });
+    const client = createApiClient({
+      baseUrl: "https://api.example.test",
+      fetchImpl,
+    });
 
     await expect(
       client.paginate<number, { items: number[] }>(
-        '/items?sort=name',
-        data => data.items,
+        "/items?sort=name",
+        (data) => data.items,
         undefined,
         150
       )
     ).resolves.toEqual(Array.from({ length: 150 }, (_, index) => index + 1));
 
     expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
-      'https://api.example.test/items?sort=name&per_page=100&page=1',
-      'https://api.example.test/items?sort=name&per_page=100&page=2',
+      "https://api.example.test/items?sort=name&per_page=100&page=1",
+      "https://api.example.test/items?sort=name&per_page=100&page=2",
     ]);
   });
 });
 
-describe('pool', () => {
-  test('keeps result order while respecting concurrency', async () => {
+describe("pool", () => {
+  test("keeps result order while respecting concurrency", async () => {
     let active = 0;
     let maxActive = 0;
     const resolvers: (() => void)[] = [];
     const resolveNext = () => {
       const resolve = resolvers.shift();
-      if (!resolve) throw new Error('No pending task');
+      if (!resolve) {
+        throw new Error("No pending task");
+      }
       resolve();
     };
-    const tasks = [1, 2, 3].map(value => async () => {
-      active++;
+    const tasks = [1, 2, 3].map((value) => async () => {
+      active += 1;
       maxActive = Math.max(maxActive, active);
-      await new Promise<void>(resolve => resolvers.push(resolve));
-      active--;
+      await new Promise<void>((resolve) => {
+        resolvers.push(resolve);
+      });
+      active -= 1;
       return value;
     });
 
     const promise = pool(tasks, 2);
     expect(maxActive).toBe(2);
     resolveNext();
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
     expect(maxActive).toBe(2);
     resolveNext();
     resolveNext();
