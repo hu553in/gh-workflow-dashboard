@@ -38,5 +38,5 @@
     "ultracite": "^8.1.1",
     "vite": "^8.3.3"
   },
-  "packageManager": "bun@1.4.4"
+  "packageManager": "bun@1.4.5"
 }
