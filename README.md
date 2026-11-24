@@ -65,4 +65,4 @@ bun check:fix   # Full local gate with automatic fixes
 - Vanilla TypeScript
 - Vite
 - GitHub REST API `v2022-11-28`
-- Bun test, Ultracite (Oxlint + Oxfmt), Stylelint, Knip
+- Bun test, Bun fmt, Oxlint with Ultracite rules, Stylelint, Knip
